@@ -1,8 +1,8 @@
 # %% [markdown]
-# # Baseline: unmodified sample agent, Gemma 4 12B, sound tasks only
+# # Baseline: unmodified sample agent, Gemma 4 12B, 20 sound tasks
 #
-# Measures the **unmodified** `sample_submission` (prompts, tools, sampling untouched) with a real model, on the 52
-# tasks whose reference patch passes in this environment (see `findings/sound_task_ids.txt`). Every later experiment
+# Measures the **unmodified** `sample_submission` (prompts, tools, sampling untouched) with a real model, on a fixed
+# 20-task sample of the 52 tasks whose reference patch passes in this environment (`findings/baseline_tasks_20.txt`). Every later experiment
 # is compared with this number.
 #
 # The only change from the sample is the per-task budget: the sample's own limits (10 tool calls, 1 minute) are a
@@ -103,20 +103,17 @@ WORKING_DIR = Path('/kaggle/working')
 RESULTS_JSONL = WORKING_DIR / 'baseline_results.jsonl'
 
 MODEL_NAME = 'gemma-4-12b-it-qat-w4a16-ct'
-MAX_TASKS = 3            # PILOT: measure speed first. Set to None for all 52 sound tasks.
+MAX_TASKS = None         # None = all tasks in the list below (20-task baseline)
 SESSION_LIMIT_HOURS = 10.5   # stop starting new tasks after this so results are saved (Kaggle max session is 12h)
 
 # Baseline budget (see header). Only these numbers differ from the unmodified sample.
 BUDGET = {'timeout_seconds': 300, 'max_tool_calls': 40, 'max_time_minutes': 5, 'max_turns': 80}
 
-# The 52 tasks whose reference patch passes in the Kaggle CPU check (findings/sound_task_ids.txt).
+# The 20-task baseline sample drawn from the 52 sound tasks (findings/baseline_tasks_20.txt).
 SOUND_IDS = """
-fastapi_15661 fastapi_15588 fastapi_15589 fastapi_15280 fastapi_14986 requests_7427 requests_7315
-requests_7309 rich_4077 rich_4076 rich_4075 rich_4006 fastapi_14258 fastapi_14851 fastapi_14873
-fastapi_14372 rich_3718 rich_3934 rich_3953 rich_3944 rich_3942 rich_3938 rich_3882 rich_3894
-rich_3935 rich_3905 rich_3930 fastapi_15800 rich_3180 rich_3777 rich_3468 rich_3772 rich_3675
-rich_3676 rich_3518 rich_3535 rich_3521 rich_3506 rich_3480 rich_3454 rich_3471 rich_3470 rich_3052
-rich_3278 rich_2943 rich_2725 rich_3105 rich_3043 rich_3067 rich_3006 rich_3063 rich_3061
+fastapi_14258 fastapi_14372 fastapi_14851 fastapi_14873 fastapi_14986 fastapi_15280 fastapi_15588
+fastapi_15589 fastapi_15661 fastapi_15800 rich_2725 rich_3061 rich_3454 rich_3506
+rich_3718 rich_3905 rich_3944 rich_4077 requests_7309 requests_7427
 """.split()
 
 # Copy the sample submission to a writable folder; adapt the model for 12B (the sample's dummy LoRAs are 31B-shaped).
