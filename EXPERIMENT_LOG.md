@@ -15,6 +15,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
+| Exp 3: brief-reasoning prompt (provisional keep) | 5/20 | 8 timeouts, 4 tool-budget, 3 patch-failed; 10 empty patches; one gain may be vacuous |
 
 ## Exp 1: cap max_output_tokens
 - Objective: remove `ContextWindowExceededError` (16384 requested output + >16.4k prompt > 32768 context).
@@ -33,13 +34,19 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Decision: REJECT (keep thinking_budget 4096). Cost ~2.2-3 GPU-h.
 - Artifacts: `notebooks/exp02_thinking/`, `findings/exp02_results.csv`, Kaggle `bellosashmed/gemma-4-exp02-thinking`.
 
-## Exp 3: prompt for brief reasoning and careful edit_file  (RUNNING, launched 2026-10-14)
-- Change: append a "Working style" section to `prompts/system.md` (short reasoning, small exact `old_string`, confirm edits, minimal diff, scratch files in /tmp).
-- Kaggle: `bellosashmed/gemma-4-exp03-prompt`. Artifacts: `notebooks/exp03_prompt/`.
+## Exp 3: prompt for brief reasoning and careful edit_file  (DONE, PROVISIONAL KEEP)
+- Change: append a "Working style" section to `prompts/system.md` (short reasoning, small exact `old_string`, confirm edits, minimal diff, scratch files in /tmp). Only change.
+- Result: **5/20** (best 3/20). Gained `fastapi_14851`, `rich_2725`; lost none. Failure causes: 8 out of time, 4 out of tool calls, 3 patch submitted/tests failed; 10 empty patches. Mean 251 s, 29.8 tool calls.
+- CAVEAT: `fastapi_14851` is recorded as resolved with patch length 0 (trace shows edit/write calls). Possible vacuous pass (tests pass with no patch) or a patch-recording gap. An empty-patch audit on all 52 sound tasks was launched (`notebooks/empty_control`, Kaggle `bellosashmed/gemma-4-empty-patch-audit`) to decide. Excluding that task the gain is 4/20 vs 3/20, within noise.
+- Decision: provisional KEEP (prompt-only, no downside observed); re-confirm on the 52-task validation.
+- Artifacts: `notebooks/exp03_prompt/`, `findings/exp03_results.csv`, Kaggle `bellosashmed/gemma-4-exp03-prompt`.
 
 ## Exp 4: sandbox-gap awareness  (RUNNING, launched 2026-10-14)
 - Change: append a "Test environment limits" section to `prompts/system.md`.
 - Artifacts: `notebooks/exp04_sandbox/` (generated, validated locally).
 
-## Exp 5-8: not started
-5 per-repo cheat sheets; 6 structured Localize->Reproduce->Fix->Verify pipeline; 7 graph-based context / best-of-N; 8 LoRA fine-tune.
+## Exp 5: per-repo cheat sheets  (RUNNING, launched 2026-10-14)
+- Change: append verified per-repo notes (fastapi, rich, requests) to the system prompt. Artifacts: `notebooks/exp05_cheatsheets/`.
+
+## Exp 6-8: not started (6 prepared)
+ 6 structured Localize->Reproduce->Fix->Verify pipeline; 7 graph-based context / best-of-N; 8 LoRA fine-tune.
