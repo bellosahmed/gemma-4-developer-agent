@@ -1,0 +1,276 @@
+# %% [markdown]
+# # Baseline: unmodified sample agent, Gemma 4 12B, sound tasks only
+#
+# Measures the **unmodified** `sample_submission` (prompts, tools, sampling untouched) with a real model, on the 52
+# tasks whose reference patch passes in this environment (see `findings/sound_task_ids.txt`). Every later experiment
+# is compared with this number.
+#
+# The only change from the sample is the per-task budget: the sample's own limits (10 tool calls, 1 minute) are a
+# smoke test. The scorer has 12 hours for all tasks, which is roughly 5 minutes each if the hidden set is the size of
+# the public one (unknown), so the baseline uses 5 minutes / 40 tool calls.
+#
+# Attach: the competition data, dataset `metric/gemma-4-developer-agent-wheelhouse`, and model
+# `google/gemma-4/other/gemma-4-12b-it-qat-w4a16-ct/2`. Settings: GPU on, Internet off. Keep this notebook PRIVATE.
+
+# %% [markdown]
+# ## 1. Install the harness and serving stack (same approach as the official starter)
+
+# %%
+import glob
+import importlib
+import logging
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+os.environ['TRANSFORMERS_NO_TF'] = '1'
+os.environ['TRANSFORMERS_NO_FLAX'] = '1'
+os.environ['TRANSFORMERS_OFFLINE'] = '1'
+os.environ['VLLM_NO_USAGE_STATS'] = '1'
+os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
+os.environ['VLLM_ENGINE_READY_TIMEOUT_S'] = '1200'
+os.environ['VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS'] = '1'
+os.environ['NCCL_DEBUG'] = 'WARN'
+os.environ['LITELLM_LOCAL_MODEL_COST_MAP'] = 'True'
+os.environ['LITELLM_TELEMETRY'] = 'False'
+os.environ['LITELLM_LOG'] = 'WARNING'
+os.environ['OPENAI_API_KEY'] = os.environ.get('OPENAI_API_KEY', 'EMPTY')
+os.environ['LOCAL_API_KEY'] = os.environ.get('LOCAL_API_KEY', 'EMPTY')
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+os.environ['OTEL_SDK_DISABLED'] = 'true'
+os.environ['OTEL_PYTHON_DISABLED'] = 'true'
+
+for name in ('LiteLLM', 'LiteLLM Router', 'LiteLLM Proxy', 'litellm', 'httpx', 'httpcore', 'openai', 'urllib3'):
+    lg = logging.getLogger(name)
+    lg.setLevel(logging.WARNING)
+
+WHEELHOUSE_DIR = Path('/kaggle/input/datasets/metric/gemma-4-developer-agent-wheelhouse')
+
+# Remove broken cutlass .pth hooks if present (as in the starter)
+for pth_pattern in ('/usr/local/lib/python*/dist-packages/*cutlass*.pth', '/usr/local/lib/python*/site-packages/*cutlass*.pth'):
+    for pth in glob.glob(pth_pattern):
+        try:
+            os.unlink(pth)
+        except OSError:
+            pass
+
+# Restore PEP 440 '+cu128' wheel filenames stripped by Kaggle dataset uploads
+tmp_whl = Path('/tmp/wheelhouse')
+tmp_whl.mkdir(parents=True, exist_ok=True)
+for w in WHEELHOUSE_DIR.glob('*.whl'):
+    if 'cutlass' in w.name.lower():
+        continue
+    name = w.name.replace('cu128', '+cu128') if ('cu128' in w.name and '+' not in w.name) else w.name
+    target = tmp_whl / name
+    if not target.exists():
+        try:
+            os.symlink(w, target)
+        except OSError:
+            shutil.copyfile(w, target)
+
+# Install only wheels this interpreter supports; the harness wheels are mandatory.
+from packaging.tags import sys_tags  # noqa: E402
+from packaging.utils import parse_wheel_filename  # noqa: E402
+
+supported = set(sys_tags())
+wheels, skipped = [], []
+for w in sorted(tmp_whl.glob('*.whl')):
+    (wheels if any(t in supported for t in parse_wheel_filename(w.name)[3]) else skipped).append(w)
+print(f'Python {sys.version.split()[0]}: installing {len(wheels)} wheels, skipping {len(skipped)}: '
+      f'{[w.name.split("-")[0] for w in skipped]}')
+for req in ('swegemma', 'adk_submission', 'adk_eval_core', 'google_adk', 'vllm'):
+    assert any(w.name.startswith(req + '-') for w in wheels), f'required wheel not installable here: {req}'
+
+subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '--no-deps', '--force-reinstall', *map(str, wheels)], check=True)
+importlib.invalidate_caches()
+print('wheelhouse installation complete')
+
+# %% [markdown]
+# ## 2. Configuration: the unmodified sample agent + baseline budget + sound task list
+
+# %%
+import json  # noqa: E402
+import time  # noqa: E402
+
+import yaml  # noqa: E402
+from swegemma.models import load_tasks  # noqa: E402
+
+DATA_DIR = Path('/kaggle/input/competitions/gemma-4-developer-agent')
+WORKING_DIR = Path('/kaggle/working')
+RESULTS_JSONL = WORKING_DIR / 'baseline_results.jsonl'
+
+MODEL_NAME = 'gemma-4-12b-it-qat-w4a16-ct'
+MAX_TASKS = 3            # PILOT: measure speed first. Set to None for all 52 sound tasks.
+SESSION_LIMIT_HOURS = 10.5   # stop starting new tasks after this so results are saved (Kaggle max session is 12h)
+
+# Baseline budget (see header). Only these numbers differ from the unmodified sample.
+BUDGET = {'timeout_seconds': 300, 'max_tool_calls': 40, 'max_time_minutes': 5, 'max_turns': 80}
+
+# The 52 tasks whose reference patch passes in the Kaggle CPU check (findings/sound_task_ids.txt).
+SOUND_IDS = """
+fastapi_15661 fastapi_15588 fastapi_15589 fastapi_15280 fastapi_14986 requests_7427 requests_7315
+requests_7309 rich_4077 rich_4076 rich_4075 rich_4006 fastapi_14258 fastapi_14851 fastapi_14873
+fastapi_14372 rich_3718 rich_3934 rich_3953 rich_3944 rich_3942 rich_3938 rich_3882 rich_3894
+rich_3935 rich_3905 rich_3930 fastapi_15800 rich_3180 rich_3777 rich_3468 rich_3772 rich_3675
+rich_3676 rich_3518 rich_3535 rich_3521 rich_3506 rich_3480 rich_3454 rich_3471 rich_3470 rich_3052
+rich_3278 rich_2943 rich_2725 rich_3105 rich_3043 rich_3067 rich_3006 rich_3063 rich_3061
+""".split()
+
+# Copy the sample submission to a writable folder; adapt the model for 12B (the sample's dummy LoRAs are 31B-shaped).
+AGENT_DIR = WORKING_DIR / 'sample_submission'
+if AGENT_DIR.exists():
+    shutil.rmtree(AGENT_DIR)
+shutil.copytree(DATA_DIR / 'sample_submission', AGENT_DIR)
+for yaml_path in [AGENT_DIR / 'agent.yaml', *sorted((AGENT_DIR / 'sub_agents').glob('*.yaml'))]:
+    text = yaml_path.read_text(encoding='utf-8')
+    text = re.sub(r'^(\s*model:\s*).*$', rf'\g<1>{MODEL_NAME}', text, flags=re.MULTILINE)
+    text = re.sub(r'^\s*adapter:\s*.*\n?', '', text, flags=re.MULTILINE)
+    yaml_path.write_text(text, encoding='utf-8')
+shutil.rmtree(AGENT_DIR / 'adapters', ignore_errors=True)
+(AGENT_DIR / 'eval_config.yaml').write_text(yaml.safe_dump({'evaluation': BUDGET}), encoding='utf-8')
+
+all_tasks = {t.instance_id: t for t in load_tasks(DATA_DIR / 'tasks.jsonl')}
+tasks = [all_tasks[i] for i in SOUND_IDS]
+if MAX_TASKS:
+    tasks = tasks[:MAX_TASKS]
+print(f'{len(tasks)} tasks | model={MODEL_NAME} | budget={BUDGET}')
+
+# %% [markdown]
+# ## 3. Start the vLLM server (same settings as the scorer: 32k context, Gemma 4 parsers)
+
+# %%
+import litellm  # noqa: E402
+import torch  # noqa: E402
+from adk_submission import VllmConfig, VllmServer, discover_adapters  # noqa: E402
+from adk_submission.discovery import discover_declared_models  # noqa: E402
+from swegemma.config import ALLOWED_ADAPTER_EXTENSIONS  # noqa: E402
+
+litellm.drop_params = True
+ALLOWED_MODEL_NAMES = frozenset({
+    'gemma-4-31b-it-qat-w4a16-ct', 'gemma-4-12b-it-qat-w4a16-ct',
+    'gemma-4-e4b-it-qat-w4a16-ct', 'gemma-4-e2b-it-qat-w4a16-ct',
+})
+MODEL_VLLM_EXTRA_ARGS = {
+    'gemma-4-12b-it-qat-w4a16-ct': ('--hf-overrides', '{"architectures": ["Gemma4ForCausalLM"], "model_type": "gemma4"}'),
+}
+INFERENCE_API_KEY = os.environ.get('LOCAL_API_KEY', 'EMPTY')
+
+declared_models = discover_declared_models(AGENT_DIR)
+assert len(declared_models) == 1, f'Expected exactly 1 declared model, got: {sorted(declared_models)}'
+declared_model = next(iter(declared_models))
+assert declared_model in ALLOWED_MODEL_NAMES, f'Unsupported model {declared_model!r}'
+
+MODEL_PATH = Path(f'/kaggle/input/models/google/gemma-4/other/{declared_model}/2')
+assert MODEL_PATH.exists(), f'Model weights not found at {MODEL_PATH}. Attach the model input.'
+
+adapters = discover_adapters(str(AGENT_DIR), adapter_extensions=ALLOWED_ADAPTER_EXTENSIONS)
+adapter_map = getattr(adapters, 'adapters', None) or {}
+detected_ranks = [r for info in adapter_map.values() if (r := getattr(info, 'rank', None)) is not None and r > 0]
+
+gpu_count = torch.cuda.device_count() if torch.cuda.is_available() else 1
+tp_size = 4 if gpu_count >= 4 else (2 if gpu_count >= 2 else 1)
+print(f'GPUs: {gpu_count} x {torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none"}; tensor_parallel={tp_size}')
+
+if 'server_instance' in globals() and server_instance is not None:
+    server_instance.stop()
+
+vllm_cfg = VllmConfig(
+    model=str(MODEL_PATH), port=8000, host='127.0.0.1',
+    tool_call_parser='gemma4', reasoning_parser='gemma4', max_model_len=32768,
+    dtype='bfloat16' if (torch.cuda.is_available() and torch.cuda.is_bf16_supported()) else 'auto',
+    gpu_memory_utilization=0.90, enable_auto_tool_choice=True,
+    enable_lora=bool(adapter_map), max_loras=max(1, len(adapter_map)),
+    max_lora_rank=max(detected_ranks) if detected_ranks else 128,
+    scheduler_reserve_full_isl=False, tensor_parallel_size=tp_size, startup_timeout=60 * 20,
+    extra_args=MODEL_VLLM_EXTRA_ARGS.get(declared_model, ()),
+)
+server_instance = VllmServer(vllm_cfg, adapter_manifest=adapters)
+server_instance.start()
+print(f'vLLM server started on {server_instance.base_url}')
+models = server_instance.create_model_registry(aliases=[declared_model], model_prefix='openai/', api_key=INFERENCE_API_KEY)
+
+# %% [markdown]
+# ## 4. Run the agent on each task (resumable; results saved after every task)
+
+# %%
+import asyncio  # noqa: E402
+import concurrent.futures  # noqa: E402
+
+from google.adk.agents.context_cache_config import ContextCacheConfig  # noqa: E402
+from google.adk.apps._configs import EventsCompactionConfig  # noqa: E402
+from swegemma.config import EvalConfig, build_submission_limits  # noqa: E402
+from swegemma.evaluate import Evaluator  # noqa: E402
+
+
+def run_sync(coro_or_fn, *args, **kwargs):
+    """Run an async call from inside a notebook's already-running event loop."""
+    fn = (lambda: coro_or_fn(*args, **kwargs)) if callable(coro_or_fn) and not asyncio.iscoroutine(coro_or_fn) else (lambda: coro_or_fn)
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    if loop is not None and loop.is_running():
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(fn())).result()
+    return asyncio.run(fn())
+
+
+limits, gen_constraints = build_submission_limits()
+eval_config = EvalConfig(
+    tasks_path=DATA_DIR / 'tasks.jsonl', snapshots_dir=DATA_DIR / 'snapshots',
+    results_dir=WORKING_DIR / 'results', submission_dir=AGENT_DIR, models=models,
+    sandbox='subprocess', timeout_seconds=BUDGET['timeout_seconds'], verification_timeout_seconds=300,
+    max_time_minutes=float(BUDGET['max_time_minutes']), max_tool_calls=BUDGET['max_tool_calls'],
+    max_turns=BUDGET['max_turns'], limits=limits, generation_constraints=gen_constraints,
+    adapter_manifest=adapters,
+    context_cache_config=ContextCacheConfig(min_tokens=2048, ttl_seconds=1800, cache_intervals=10),
+    events_compaction_config=EventsCompactionConfig(compaction_interval=15, overlap_size=2, token_threshold=14336, event_retention_size=5),
+    graph_dir=str(DATA_DIR / 'graphs'), embeddings_dir=str(DATA_DIR / 'embeddings'),
+    wheels_dir=DATA_DIR / 'wheels', verbose=False,
+)
+evaluator = Evaluator(eval_config)
+
+done = set()
+if RESULTS_JSONL.exists():
+    done = {json.loads(line)['id'] for line in RESULTS_JSONL.read_text().splitlines()}
+print(f'{len(done)} results already on disk')
+
+t0 = time.time()
+for idx, task in enumerate(tasks, start=1):
+    if task.instance_id in done:
+        continue
+    if (time.time() - t0) / 3600 > SESSION_LIMIT_HOURS:
+        print('Session time limit reached; stopping. Re-run this cell in a new session to resume.')
+        break
+    try:
+        res = run_sync(evaluator.evaluate_task, task=task, task_index=idx, total_tasks=len(tasks))
+        row = {
+            'id': task.instance_id, 'repo': task.repo, 'resolved': bool(res.resolved), 'exit_code': res.test_exit_code,
+            'patch_chars': len((res.agent_patch or '').strip()), 'tool_calls': res.tool_calls,
+            'llm_calls': getattr(res, 'total_llm_calls', None), 'seconds': round(res.duration_seconds, 1),
+            'error': (res.error or '')[:300],
+        }
+    except Exception as exc:  # record and continue
+        row = {'id': task.instance_id, 'repo': task.repo, 'resolved': False, 'exit_code': None, 'patch_chars': 0,
+               'tool_calls': None, 'llm_calls': None, 'seconds': 0.0, 'error': f'CRASH {type(exc).__name__}: {exc}'[:300]}
+    with RESULTS_JSONL.open('a') as f:
+        f.write(json.dumps(row) + '\n')
+    print(f'[{idx}/{len(tasks)}] {row["id"]:<16} resolved={row["resolved"]!s:<5} patch={row["patch_chars"]:>5} '
+          f'tools={row["tool_calls"]} {row["seconds"]}s  (elapsed {(time.time() - t0) / 60:.1f} min)', flush=True)
+
+# %% [markdown]
+# ## 5. Summary and shutdown
+
+# %%
+import pandas as pd  # noqa: E402
+
+df = pd.DataFrame([json.loads(line) for line in RESULTS_JSONL.read_text().splitlines()])
+print(f'Resolved: {int(df.resolved.sum())} / {len(df)}  ({df.resolved.mean():.1%})')
+print(f'Mean seconds per task: {df.seconds.mean():.0f}   mean tool calls: {df.tool_calls.dropna().mean():.1f}')
+print(f'Empty patches: {(df.patch_chars == 0).sum()}   crashes: {df.error.str.startswith("CRASH").sum()}')
+print(df.groupby('repo').resolved.agg(passed='sum', total='count'))
+df.to_csv(WORKING_DIR / 'baseline_summary.csv', index=False)
+server_instance.stop()
