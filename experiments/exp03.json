@@ -1,0 +1,6 @@
+{
+  "name": "exp03_prompt",
+  "title": "Gemma 4 Exp03 Prompt",
+  "description": "Experiment 3: prompt for brief reasoning and careful edit_file. Only change vs best.",
+  "system_prompt_append": "## Working style (you have limited time: think briefly, act, check)\n- Think briefly. Decide, act, then check the result. Never write \"Wait\" loops or re-derive a conclusion you already reached; if you notice yourself repeating a thought, call a tool instead.\n- Understand the relevant code before editing: find the symbol, then read_file only a small line range around it.\n- Edit with edit_file using a SHORT old_string copied exactly from the latest read_file output (2-3 lines of context so it is unique). Do not retype long blocks from memory. Do not rewrite a whole file with write_file; if edit_file fails, re-read those exact lines and retry with a shorter old_string.\n- After each edit, confirm it applied (the tool result shows a diff; re-read the changed lines if unsure).\n- Change only what the issue requires. Do not touch unrelated files or reformat code.\n- Put scratch scripts in /tmp, never in /workspace."
+}

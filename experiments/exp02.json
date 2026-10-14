@@ -1,0 +1,6 @@
+{
+  "name": "exp02_thinking",
+  "title": "Gemma 4 Exp02 Thinking",
+  "description": "Experiment 2: lower thinking_budget 4096 -> 1024. Only change vs best.",
+  "sampling": {"thinking_config": {"thinking_budget": 1024}}
+}

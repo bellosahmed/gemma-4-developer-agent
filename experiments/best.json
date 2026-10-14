@@ -1,0 +1,5 @@
+{
+  "name": "best",
+  "description": "Current best known-good config: unmodified sample agent + Experiment 1 (max_output_tokens 8192). 3/20 on the 20-task sample.",
+  "sampling": {"max_output_tokens": 8192}
+}

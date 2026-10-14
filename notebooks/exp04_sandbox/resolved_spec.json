@@ -1,0 +1,31 @@
+{
+  "description": "Experiment 4: sandbox-gap awareness prompt. Only change vs best.",
+  "name": "exp04_sandbox",
+  "sampling": {
+    "max_output_tokens": 8192
+  },
+  "system_prompt_append": "## Test environment limits (the sandbox is offline and incomplete)\n- Some tests cannot run here: test-only modules may be missing (for example inline_snapshot or dirty_equals), and there is no network or httpbin server.\n- A ModuleNotFoundError/ImportError for a test-only module, or a connection error, is an ENVIRONMENT limit, not a bug in your patch. Do not retry that test, do not try to pip install anything, and do not edit tests.\n- Verify instead with a short inline check (python3 -c \"...\", run from /tmp or with PYTHONPATH=/workspace) that exercises the changed code path, or re-read your diff carefully.\n- Never claim a test passed unless you saw it pass. State plainly what you did and did not verify.\n- Spend at most 2 tool calls on a test that cannot run, then call submit_patch with your best patch.",
+  "tasks": [
+    "fastapi_14258",
+    "fastapi_14372",
+    "fastapi_14851",
+    "fastapi_14873",
+    "fastapi_14986",
+    "fastapi_15280",
+    "fastapi_15588",
+    "fastapi_15589",
+    "fastapi_15661",
+    "fastapi_15800",
+    "rich_2725",
+    "rich_3061",
+    "rich_3454",
+    "rich_3506",
+    "rich_3718",
+    "rich_3905",
+    "rich_3944",
+    "rich_4077",
+    "requests_7309",
+    "requests_7427"
+  ],
+  "title": "Gemma 4 Exp04 Sandbox"
+}
