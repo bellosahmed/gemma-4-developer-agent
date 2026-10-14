@@ -1,0 +1,31 @@
+{
+  "description": "Experiment 6: prompt-level Localize->Reproduce->Fix->Verify procedure with regression guard. Only change vs best.",
+  "name": "exp06_pipeline",
+  "sampling": {
+    "max_output_tokens": 8192
+  },
+  "system_prompt_append": "## Repair procedure (follow these phases in order; keep each short)\n1. LOCALIZE (at most ~8 tool calls). Extract symbols, file names and error text from the issue. Use search_similar_code / get_code_neighbors to find the code, then read_file only the small line range you need. Name the file and function you will change before editing.\n2. REPRODUCE (at most ~3 tool calls). Write a tiny script in /tmp (never in /workspace) that shows the reported symptom, and run it. If you cannot reproduce it quickly, say so and continue; do not pretend it reproduced.\n3. FIX. Make the smallest edit that addresses the cause, with edit_file. Keep public names, signatures and error messages unchanged unless the issue asks otherwise.\n4. VERIFY. Re-run your /tmp script and the single most relevant existing test file or test (pytest <file> -q -x -k <name>). Report honestly what you ran and what passed or failed. If a test cannot run in this offline sandbox, say that and use a short inline check instead.\n5. REGRESSION GUARD. Run git diff --stat. Confirm that only the intended source files changed and that no scratch files are in /workspace. If a test you ran before the edit now fails, undo or fix your edit.\n6. SUBMIT. Call submit_patch last. Never claim a check passed that you did not run.",
+  "tasks": [
+    "fastapi_14258",
+    "fastapi_14372",
+    "fastapi_14851",
+    "fastapi_14873",
+    "fastapi_14986",
+    "fastapi_15280",
+    "fastapi_15588",
+    "fastapi_15589",
+    "fastapi_15661",
+    "fastapi_15800",
+    "rich_2725",
+    "rich_3061",
+    "rich_3454",
+    "rich_3506",
+    "rich_3718",
+    "rich_3905",
+    "rich_3944",
+    "rich_4077",
+    "requests_7309",
+    "requests_7427"
+  ],
+  "title": "Gemma 4 Exp06 Pipeline"
+}
