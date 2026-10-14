@@ -1,5 +1,5 @@
 {
-  "id": "bellosashmed/gemma-4-gold-check",
+  "id": "bellosashmed/gemma-4-gold-patch-check",
   "title": "Gemma 4 Gold Patch Check",
   "code_file": "gold_check_kaggle.ipynb",
   "language": "python",

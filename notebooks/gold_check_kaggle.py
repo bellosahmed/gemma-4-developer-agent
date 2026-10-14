@@ -47,9 +47,25 @@ for w in WHEELHOUSE_DIR.glob('*.whl'):
         except OSError:
             shutil.copyfile(w, target)
 
-wheels = sorted(str(w) for w in tmp_whl.glob('*.whl'))
-print(f'Installing {len(wheels)} wheels (GPU packages skipped)...')
-subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '--no-deps', '--force-reinstall', *wheels], check=True)
+# The wheelhouse targets the GPU image (CPython 3.12); CPU notebooks may run a newer Python, where
+# 3.12-only compiled wheels are rejected. Install only wheels this interpreter supports.
+from packaging.tags import sys_tags  # noqa: E402
+from packaging.utils import parse_wheel_filename  # noqa: E402
+
+supported = set(sys_tags())
+wheels, skipped = [], []
+for w in sorted(tmp_whl.glob('*.whl')):
+    tags = parse_wheel_filename(w.name)[3]
+    (wheels if any(t in supported for t in tags) else skipped).append(w)
+print(f'Python {sys.version.split()[0]}: installing {len(wheels)} wheels, '
+      f'skipping {len(skipped)} incompatible: {[w.name.split("-")[0] for w in skipped]}')
+
+required = ('swegemma', 'adk_submission', 'adk_eval_core', 'google_adk')
+missing = [r for r in required if not any(w.name.startswith(r + '-') for w in wheels)]
+assert not missing, f'Required harness wheels not installable on this Python: {missing}'
+
+subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '--no-deps', '--force-reinstall',
+                *map(str, wheels)], check=True)
 importlib.invalidate_caches()
 
 import swegemma  # noqa: E402
@@ -74,7 +90,7 @@ WORKING_DIR = Path('/kaggle/working')
 RESULTS_JSONL = WORKING_DIR / 'gold_results.jsonl'
 
 CONTROL_N = 10        # also run an empty-patch control on the first N tasks
-MAX_TASKS = None      # set to e.g. 5 for a quick smoke test; None = all tasks
+MAX_TASKS = None      # None = all tasks; set to e.g. 5 for a quick trial
 SANDBOX = 'subprocess'  # same backend the official starter notebook uses
 
 tasks = load_tasks(DATA_DIR / 'tasks.jsonl')
