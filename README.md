@@ -71,9 +71,27 @@ all 129 public tasks, no model). Raw results: `findings/gold_summary.csv`; passa
 Earlier local Docker checks agreed in direction (reference patches passed on only 2 of 8 tasks) but with different causes
 for some tasks, so local Docker results should not be trusted as a stand-in for the Kaggle environment.
 
+## Baseline (unmodified sample agent, Gemma 4 12B, 20 sound tasks)
+
+Notebook: `notebooks/baseline/` (Kaggle, 4x L4, starter's pinned image). Sample prompt, tools and sampling untouched;
+budget 5 min / 40 tool calls per task. Tasks: `findings/baseline_tasks_20.txt` (10 fastapi, 8 rich, 2 requests).
+Per-task results: `findings/baseline_20_results.csv`. Cost: ~2.8 GPU-hours of the free weekly quota.
+
+**Resolved 3 / 20 (15%)**: fastapi 0/10, rich 3/8, requests 0/2. Mean 230 s and 25.6 tool calls per task; 9 tasks ended with no patch.
+
+| Why the other 17 failed | Tasks |
+|---|---|
+| `ContextWindowExceededError`: sample asks for 16,384 output tokens, so once the prompt passes ~16.4k tokens every model call is rejected | 8 |
+| Ran out of time (5 min) | 5 |
+| Ran out of tool calls (40) | 3 |
+| Patch recovered/submitted, tests failed | 1 |
+
+Observed in traces (3-task pilot): the model sometimes stalls in one long call (~60 tokens/s, so a 16k-token reply is ~4 min),
+repeats "Wait ..." reasoning loops, and burns calls on `edit_file` exact-match failures.
+
 ## Plan
 
 1. (Done) Reference-patch check on Kaggle: 52 sound tasks. Next: keep the 17 unknown-cause failures in mind and re-run with longer output tails if they matter.
-2. Baseline: score `sample_submission` unmodified.
+2. (Done) Baseline: 3/20. Next: Experiment 1 = cap `max_output_tokens` (removes the context-window failures and limits stalls), then prompt changes.
 3. Improve in order: prompts and tool use, sub-agent for code search, budgets in `eval_config.yaml`,
    best-of-N with self-verification, LoRA only if it measurably helps. Keep a held-out validation split.

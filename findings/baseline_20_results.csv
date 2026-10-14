@@ -1,0 +1,21 @@
+id,repo,resolved,exit_code,patch_chars,tool_calls,llm_calls,seconds,error
+fastapi_14258,fastapi/fastapi,False,2,592,22,22,269.3,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+fastapi_14372,fastapi/fastapi,False,-1,0,40,43,310.6,Agent exceeded session timeout (5.0 min)
+fastapi_14851,fastapi/fastapi,False,-1,0,29,29,138.1,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+fastapi_14873,fastapi/fastapi,False,-1,0,24,24,231.7,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+fastapi_14986,fastapi/fastapi,False,1,732,22,22,189.0,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+fastapi_15280,fastapi/fastapi,False,-1,0,40,41,165.7,Agent exceeded tool call budget (40 calls)
+fastapi_15588,fastapi/fastapi,False,1,1055,14,16,161.8,
+fastapi_15589,fastapi/fastapi,False,-1,0,10,11,311.3,Agent exceeded session timeout (5.0 min)
+fastapi_15661,fastapi/fastapi,False,-1,0,40,41,143.5,Agent exceeded tool call budget (40 calls)
+fastapi_15800,fastapi/fastapi,False,-1,0,40,42,153.0,Agent exceeded tool call budget (40 calls)
+rich_2725,Textualize/rich,True,0,1098,28,28,308.1,
+rich_3061,Textualize/rich,False,1,804,32,32,269.2,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+rich_3454,Textualize/rich,True,0,654,18,18,174.4,
+rich_3506,Textualize/rich,False,1,689,16,16,224.7,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+rich_3718,Textualize/rich,False,-1,0,11,11,305.6,Agent exceeded session timeout (5.0 min)
+rich_3905,Textualize/rich,True,0,626,30,30,304.7,
+rich_3944,Textualize/rich,False,-1,0,33,34,157.7,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+rich_4077,Textualize/rich,False,1,666,20,20,306.8,Agent exceeded session timeout (5.0 min)
+requests_7309,psf/requests,False,1,687,20,20,167.6,"Sandbox execution error: litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 16384 output tokens and your prompt contains at least 16385 input tokens, for a total of at "
+requests_7427,psf/requests,False,1,737,24,25,304.3,Agent exceeded session timeout (5.0 min)
