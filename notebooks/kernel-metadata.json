@@ -1,0 +1,15 @@
+{
+  "id": "bellosashmed/gemma-4-gold-check",
+  "title": "Gemma 4 Gold Patch Check",
+  "code_file": "gold_check_kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": ["metric/gemma-4-developer-agent-wheelhouse"],
+  "competition_sources": ["gemma-4-developer-agent"],
+  "kernel_sources": [],
+  "model_sources": []
+}
