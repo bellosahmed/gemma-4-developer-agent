@@ -43,20 +43,37 @@ The starter notebook is Kaggle's, not ours: `kaggle kernels pull ryanholbrook/ge
 
 ## Findings so far
 
-- Task mix: 129 public tasks, 67 fastapi / 48 rich / 13 requests / 1 httpx.
-- Leaderboard (2026-10-13) top score was 0.24.
-- **Local Docker grading is not reliable.** Reference patches pass on only 2 of 8 tasks tried
-  (`fastapi_15661`, `rich_3061`). Causes seen:
-  - `fastapi_14077`: `pydantic` needs `typing_inspection`, which is absent from the competition `wheels/`.
-  - `requests_6592`: tests need an `httpbin` server and network access; sandbox is offline.
-  - `rich_4079`: exact-color assertion differs with the Pygments version in the sandbox.
-  - `httpx_3672`: `httpx.Stream` missing at test time; a different `httpx` is imported than the repo's (cause not pinned down).
-- Some tasks may be unpassable in the official environment too. Next step: run the same reference-patch check in a
-  Kaggle CPU notebook (the real scoring conditions) to get the true list of passable tasks.
+Reference-patch check on Kaggle's CPU notebook (`notebooks/gold_check_kaggle.ipynb`, Python 3.13, `subprocess` sandbox,
+all 129 public tasks, no model). Raw results: `findings/gold_summary.csv`; passable tasks: `findings/sound_task_ids.txt`.
+
+- **Only 52 of 129 tasks (40%) pass with the correct reference patch.** The 10 empty-patch controls all fail, as they should.
+  A task whose correct fix fails cannot be solved by any agent in that environment.
+
+| Repo | Reference patch passes |
+|---|---|
+| rich | 39 / 48 |
+| fastapi | **10 / 67** |
+| requests | 3 / 13 |
+| httpx | 0 / 1 |
+
+- Causes of the 77 failures (counted from the saved pytest output):
+  - 26 fastapi tasks: tests import `inline_snapshot`, which is not in the competition `wheels/`.
+  - 21 fastapi tasks: `TypeError: Router.__init__() got an unexpected keyword argument 'on_startup'` (a Starlette
+    version that is too new for the repo; the notebook host's packages are used, not the pinned wheels).
+  - 5 fastapi tasks: tests import `dirty_equals`, also missing from `wheels/`.
+  - 17 tasks end with an empty `STDERR:`; the cause is unknown (the notebook kept only the last 1,500 chars of output).
+  - ~6 others: exact-output assertions (Pygments/terminal differences) or one-off errors (`httpx_3672`: `httpx.Stream` missing).
+- Caveats: Kaggle's CPU notebook runs Python 3.13 but the wheelhouse targets the GPU image (Python 3.12), so the official
+  scorer's environment may differ. Treat the numbers as strong evidence, not proof.
+- Leaderboard (2026-10-13) top score was 0.24. Public-set ceiling here looks like roughly 52/129 = 0.40.
+- Task mix is lopsided (67 fastapi, 48 rich, 13 requests, 1 httpx), and fastapi, the biggest repo, is where most tasks are unsound.
+
+Earlier local Docker checks agreed in direction (reference patches passed on only 2 of 8 tasks) but with different causes
+for some tasks, so local Docker results should not be trusted as a stand-in for the Kaggle environment.
 
 ## Plan
 
-1. Reference-patch check on Kaggle (CPU, no model) to find sound tasks.
+1. (Done) Reference-patch check on Kaggle: 52 sound tasks. Next: keep the 17 unknown-cause failures in mind and re-run with longer output tails if they matter.
 2. Baseline: score `sample_submission` unmodified.
 3. Improve in order: prompts and tool use, sub-agent for code search, budgets in `eval_config.yaml`,
    best-of-N with self-verification, LoRA only if it measurably helps. Keep a held-out validation split.
