@@ -1,0 +1,40 @@
+# --- Heavy / regenerable data (see README for how to re-create) ---
+kaggle-data/
+wheelhouse/
+sandbox-build/
+results/
+starter-notebook/
+*.tgz
+*.tar.gz
+*.zip
+*.whl
+*.npz
+*.safetensors
+*.gguf
+
+# --- Python environments and caches ---
+venv*/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Logs and run output ---
+*.log
+nohup.out
+progress.txt
+
+# --- Secrets: never commit ---
+.env
+.env.*
+*.pem
+*.key
+kaggle.json
+access_token
+.kaggle/
+
+# --- Editor / OS ---
+.DS_Store
+.idea/
+.vscode/
