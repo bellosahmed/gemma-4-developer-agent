@@ -1,0 +1,31 @@
+{
+  "description": "Experiment 5: concise verified per-repo notes (fastapi, rich, requests) in the system prompt. Only change vs best.",
+  "name": "exp05_cheatsheets",
+  "sampling": {
+    "max_output_tokens": 8192
+  },
+  "system_prompt_append": "## Repository notes (use the section for the repository named in the task)\nfastapi/fastapi\n- Library code is in fastapi/. Most fixes land in fastapi/dependencies/utils.py (request parameter and body handling), fastapi/routing.py, fastapi/_compat/v2.py and fastapi/_compat/shared.py (pydantic compatibility), fastapi/openapi/utils.py (OpenAPI schema), fastapi/applications.py, fastapi/params.py and fastapi/dependencies/models.py. Pydantic-v1 parameter classes are in fastapi/temp_pydantic_v1_params.py.\n- Tutorial examples are executable files at docs_src/<topic>/tutorialNNN*.py and are tested by tests/test_tutorial/test_<topic>/. For a tutorial task, edit the file under docs_src/, not the markdown docs.\n- General tests are tests/test_*.py. Run one file or test: python -m pytest tests/test_x.py -q -x -k name\nTextualize/rich\n- One module per feature in rich/ (console.py, cells.py = character cell widths, segment.py, markdown.py, syntax.py, table.py, text.py, traceback.py, style/theme code, prompt.py). Tests mirror the module names: tests/test_<module>.py.\n- Many rich tests compare exact rendered strings including ANSI escape codes, so any change to rendered output breaks them. Do not alter output unless the issue asks for it, and run the matching test file after editing.\npsf/requests\n- Library code is in src/requests/ (utils.py, models.py, adapters.py, sessions.py, exceptions.py). Tests are tests/test_requests.py, tests/test_utils.py, tests/test_adapters.py. Some tests in test_requests.py need a local httpbin server and may not run offline; prefer test_utils.py or a short inline check.",
+  "tasks": [
+    "fastapi_14258",
+    "fastapi_14372",
+    "fastapi_14851",
+    "fastapi_14873",
+    "fastapi_14986",
+    "fastapi_15280",
+    "fastapi_15588",
+    "fastapi_15589",
+    "fastapi_15661",
+    "fastapi_15800",
+    "rich_2725",
+    "rich_3061",
+    "rich_3454",
+    "rich_3506",
+    "rich_3718",
+    "rich_3905",
+    "rich_3944",
+    "rich_4077",
+    "requests_7309",
+    "requests_7427"
+  ],
+  "title": "Gemma 4 Exp05 Cheatsheets"
+}

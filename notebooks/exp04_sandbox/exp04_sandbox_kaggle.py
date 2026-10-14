@@ -199,7 +199,24 @@ tp_size = 4 if gpu_count >= 4 else (2 if gpu_count >= 2 else 1)
 print(f'GPUs: {gpu_count} x {torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none"}; tensor_parallel={tp_size}')
 
 if 'server_instance' in globals() and server_instance is not None:
-    server_instance.stop()
+    # Package the exact agent that was evaluated, so the validated artifact is the submitted artifact.
+import hashlib  # noqa: E402
+import zipfile  # noqa: E402
+
+from adk_submission import validate_directory  # noqa: E402
+from swegemma.config import ALLOWED_SUBMISSION_EXTENSIONS, MAX_SUBMISSION_SIZE_BYTES  # noqa: E402
+
+validate_directory(AGENT_DIR, limits=limits)
+zip_path = Path(shutil.make_archive(str(WORKING_DIR / f"{EXP['name']}_submission"), 'zip', root_dir=AGENT_DIR))
+with zipfile.ZipFile(zip_path) as zf:
+    infos = zf.infolist()
+    assert sum(i.file_size for i in infos) <= MAX_SUBMISSION_SIZE_BYTES
+    assert all(Path(i.filename).suffix.lower() in ALLOWED_SUBMISSION_EXTENSIONS for i in infos if not i.is_dir())
+    assert 'agent.yaml' in zf.namelist(), 'agent.yaml must be at the archive root'
+if EXP.get('package_as_submission'):
+    shutil.copyfile(zip_path, WORKING_DIR / 'submission.zip')
+print(f'packaged {zip_path.name}: {zip_path.stat().st_size} bytes, sha256 {hashlib.sha256(zip_path.read_bytes()).hexdigest()[:16]}')
+server_instance.stop()
 
 vllm_cfg = VllmConfig(
     model=str(MODEL_PATH), port=8000, host='127.0.0.1',
