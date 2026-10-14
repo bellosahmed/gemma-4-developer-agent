@@ -1,0 +1,21 @@
+id,repo,resolved,exit_code,patch_chars,tool_calls,llm_calls,seconds,error
+fastapi_14258,fastapi/fastapi,False,-1,0,40,42,167.1,Agent exceeded tool call budget (40 calls)
+fastapi_14372,fastapi/fastapi,False,-1,0,40,43,196.7,Agent exceeded tool call budget (40 calls)
+fastapi_14851,fastapi/fastapi,False,-1,0,40,41,150.4,Agent exceeded tool call budget (40 calls)
+fastapi_14873,fastapi/fastapi,False,-1,0,33,33,305.2,Agent exceeded session timeout (5.0 min)
+fastapi_14986,fastapi/fastapi,False,2,3534,40,40,308.0,Agent exceeded session timeout (5.0 min)
+fastapi_15280,fastapi/fastapi,False,-1,0,40,42,105.8,Agent exceeded tool call budget (40 calls)
+fastapi_15588,fastapi/fastapi,False,1,2931,26,26,309.5,Agent exceeded session timeout (5.0 min)
+fastapi_15589,fastapi/fastapi,False,-1,0,32,33,305.6,Agent exceeded session timeout (5.0 min)
+fastapi_15661,fastapi/fastapi,False,-1,0,40,41,214.3,Agent exceeded tool call budget (40 calls)
+fastapi_15800,fastapi/fastapi,False,-1,0,40,41,153.9,Agent exceeded tool call budget (40 calls)
+rich_2725,Textualize/rich,False,-1,0,31,32,302.8,Agent exceeded session timeout (5.0 min)
+rich_3061,Textualize/rich,False,-1,0,40,43,199.5,Agent exceeded tool call budget (40 calls)
+rich_3454,Textualize/rich,True,0,654,30,32,305.6,
+rich_3506,Textualize/rich,False,-1,0,22,23,302.2,Agent exceeded session timeout (5.0 min)
+rich_3718,Textualize/rich,False,1,1242,34,34,305.0,Agent exceeded session timeout (5.0 min)
+rich_3905,Textualize/rich,True,0,626,40,44,193.7,
+rich_3944,Textualize/rich,False,-1,0,39,39,302.5,Agent exceeded session timeout (5.0 min)
+rich_4077,Textualize/rich,False,1,886,40,43,256.7,Agent exceeded tool call budget (40 calls)
+requests_7309,psf/requests,False,1,687,40,42,234.8,Agent exceeded tool call budget (40 calls)
+requests_7427,psf/requests,False,1,890,36,37,303.9,Agent exceeded session timeout (5.0 min)

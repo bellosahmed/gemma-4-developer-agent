@@ -14,6 +14,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 |---|---|---|
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
+| Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
 
 ## Exp 1: cap max_output_tokens
 - Objective: remove `ContextWindowExceededError` (16384 requested output + >16.4k prompt > 32768 context).
@@ -22,16 +23,21 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Cost: ~3.2 GPU-h. Decision: RETAIN (removes a known failure; no downside). Time is now the binding limit.
 - Artifacts: `notebooks/exp01/`, `findings/exp01_results.csv`, Kaggle `bellosashmed/gemma-4-exp01-max-output`.
 
-## Exp 2: lower thinking_budget  (RUNNING, launched 2026-10-14)
-- Objective: reduce time spent reasoning per step (time is the binding limit).
+## Exp 2: lower thinking_budget  (DONE, REJECTED)
+- Objective: reduce time spent reasoning per step (time was the binding limit).
 - Change: `thinking_config.thinking_budget 4096 -> 1024` (on top of best). Only change.
-- Kaggle: `bellosashmed/gemma-4-exp02-thinking`. Artifacts: `notebooks/exp02_thinking/`.
+- Result: **2/20** (best 3/20). Lost `fastapi_14873`, gained nothing. Empty patches 6 -> 12; tool-budget exhaustion 4 -> 9 tasks;
+  timeouts 11 -> 9; mean tool calls 28.1 -> 36.1; mean 246 s/task.
+- Reading: with less room to think the agent explores more and plans less, burning the 40-call budget without producing a patch.
+  Thinking is not what is wasting the time; unfocused exploration is.
+- Decision: REJECT (keep thinking_budget 4096). Cost ~2.2-3 GPU-h.
+- Artifacts: `notebooks/exp02_thinking/`, `findings/exp02_results.csv`, Kaggle `bellosashmed/gemma-4-exp02-thinking`.
 
 ## Exp 3: prompt for brief reasoning and careful edit_file  (RUNNING, launched 2026-10-14)
 - Change: append a "Working style" section to `prompts/system.md` (short reasoning, small exact `old_string`, confirm edits, minimal diff, scratch files in /tmp).
 - Kaggle: `bellosashmed/gemma-4-exp03-prompt`. Artifacts: `notebooks/exp03_prompt/`.
 
-## Exp 4: sandbox-gap awareness  (PREPARED, not run)
+## Exp 4: sandbox-gap awareness  (RUNNING, launched 2026-10-14)
 - Change: append a "Test environment limits" section to `prompts/system.md`.
 - Artifacts: `notebooks/exp04_sandbox/` (generated, validated locally).
 
