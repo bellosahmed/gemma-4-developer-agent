@@ -56,6 +56,8 @@ def main() -> None:
     ap.add_argument('results')
     ap.add_argument('--ref', default=str(ROOT / 'findings' / 'exp01_results.csv'))
     ap.add_argument('--name', default='experiment')
+    ap.add_argument('--exclude', default=str(ROOT / 'findings' / 'vacuous_task_ids.txt'),
+                    help='task ids that pass with an empty patch; excluded from the adjusted score')
     a = ap.parse_args()
     new, ref = load(Path(a.results)), load(Path(a.ref))
     missing = sorted(set(ref) - set(new))
@@ -71,6 +73,10 @@ def main() -> None:
     gained = [i for i in new if new[i]['resolved'] and i in ref and not ref[i]['resolved']]
     lost = [i for i in new if i in ref and ref[i]['resolved'] and not new[i]['resolved']]
     print(f'\ngained: {gained or "none"} | lost: {lost or "none"}\n')
+    ex = set(Path(a.exclude).read_text().split()) if Path(a.exclude).exists() else set()
+    valid = [i for i in ref if i not in ex and i in new]
+    adj = lambda d: sum(d[i]['resolved'] for i in valid)
+    print(f'ADJUSTED (excluding vacuous {sorted(ex & set(ref))}): reference {adj(ref)}/{len(valid)} | {a.name} {adj(new)}/{len(valid)}\n')
     summary('reference', ref)
     print()
     summary(a.name, new)

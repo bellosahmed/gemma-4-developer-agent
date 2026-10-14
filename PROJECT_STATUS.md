@@ -23,7 +23,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 0 | Baseline | done | 3/20 |
 | 1 | max_output_tokens 8192 | done, retained | 3/20 |
 | 2 | thinking_budget 1024 | done, REJECTED | 2/20 |
-| 3 | brief-reasoning prompt | done, provisional keep | 5/20 (1 gain under audit) |
+| 3 | brief-reasoning prompt | done, provisional keep | 5/20 raw; 4/19 adjusted (14851 vacuous) |
 | 4 | sandbox-gap prompt | running | - |
 | 5 | per-repo cheat sheets | running | - |
 | 6 | structured pipeline | prepared | - |
@@ -46,10 +46,10 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 ## Known issues / limitations
 - Kaggle token was pasted into chat early on: regenerate it (Settings > API) and replace `~/.kaggle/access_token`.
 - Public-set ceiling ~52/129 (40%) because 77 tasks fail even with the reference patch in the CPU environment (missing `inline_snapshot`/`dirty_equals`, Starlette mismatch, 17 unknown). The official scorer's environment may differ.
-- 20-task sample is noisy (1 task = 5 points).
+- 20-task sample is noisy (1 task = 5 points). `fastapi_14851` passes with an empty patch (vacuous): excluded from adjusted scores.
 
 ## Exact next action
-When experiments 4 and 5 finish and the empty-patch audit (Kaggle `gemma-4-empty-patch-audit`) completes: download results (`kaggle kernels output bellosashmed/<name>`), compare with 3/20, record in `EXPERIMENT_LOG.md`, then run experiment 6 (`notebooks/exp06_pipeline`, generated). Decide whether `fastapi_14851` is vacuous from the audit.
+When experiments 4 and 5 finish finish (the empty-patch audit is DONE: only `fastapi_14851` is vacuous, excluded from adjusted scores): download results (`kaggle kernels output bellosashmed/<name>`), compare with 3/20, record in `EXPERIMENT_LOG.md`, then run experiment 6 (`notebooks/exp06_pipeline`, generated). Use the 51-task valid sound set (52 minus `fastapi_14851`) for Stage 5.
 
 ## Blockers
 None.

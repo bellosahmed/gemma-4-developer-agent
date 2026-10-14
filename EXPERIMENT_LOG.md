@@ -5,7 +5,9 @@ same 20 sound tasks (`findings/baseline_tasks_20.txt`), budget 5 min / 40 tool c
 Each experiment is generated from `experiments/<name>.json` merged onto `experiments/best.json` by `notebooks/make_exp.py`
 (the merged config is saved as `notebooks/<name>/resolved_spec.json`). One change per experiment, measured against the base.
 
-Reading the numbers: n = 20, so one task = 5 points. Differences under ~15 points are within noise. Failure causes are the
+Vacuous task: `fastapi_14851` passes with no patch and is excluded from adjusted scores (`findings/vacuous_task_ids.txt`; `scripts/compare.py` prints the adjusted score). Valid sound set = 51 tasks; valid 20-sample = 19 tasks.
+
+Reading the numbers: n = 19-20, so one task = ~5 points. Differences under ~15 points are within noise. Failure causes are the
 more informative signal. Never compare these 20-task numbers with the leaderboard.
 
 ## Reference points
@@ -15,7 +17,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
-| Exp 3: brief-reasoning prompt (provisional keep) | 5/20 | 8 timeouts, 4 tool-budget, 3 patch-failed; 10 empty patches; one gain may be vacuous |
+| Exp 3: brief-reasoning prompt (provisional keep) | 5/20 raw, **4/19 adjusted** | 8 timeouts, 4 tool-budget, 3 patch-failed; 10 empty patches; `fastapi_14851` gain is vacuous |
 
 ## Exp 1: cap max_output_tokens
 - Objective: remove `ContextWindowExceededError` (16384 requested output + >16.4k prompt > 32768 context).
@@ -37,7 +39,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 ## Exp 3: prompt for brief reasoning and careful edit_file  (DONE, PROVISIONAL KEEP)
 - Change: append a "Working style" section to `prompts/system.md` (short reasoning, small exact `old_string`, confirm edits, minimal diff, scratch files in /tmp). Only change.
 - Result: **5/20** (best 3/20). Gained `fastapi_14851`, `rich_2725`; lost none. Failure causes: 8 out of time, 4 out of tool calls, 3 patch submitted/tests failed; 10 empty patches. Mean 251 s, 29.8 tool calls.
-- CAVEAT: `fastapi_14851` is recorded as resolved with patch length 0 (trace shows edit/write calls). Possible vacuous pass (tests pass with no patch) or a patch-recording gap. An empty-patch audit on all 52 sound tasks was launched (`notebooks/empty_control`, Kaggle `bellosashmed/gemma-4-empty-patch-audit`) to decide. Excluding that task the gain is 4/20 vs 3/20, within noise.
+- AUDIT RESULT: `fastapi_14851` passes with an EMPTY patch (vacuous, exit 0), so its 'resolved' is not real. The empty-patch audit (`notebooks/empty_control`, `findings/empty_patch_audit.csv`) ran all 52 sound tasks: exactly 1 vacuous, 51 correctly fail. **Adjusted score excluding it: 4/19 vs baseline 3/19** (one real gain, `rich_2725`), within noise.
 - Decision: provisional KEEP (prompt-only, no downside observed); re-confirm on the 52-task validation.
 - Artifacts: `notebooks/exp03_prompt/`, `findings/exp03_results.csv`, Kaggle `bellosashmed/gemma-4-exp03-prompt`.
 
