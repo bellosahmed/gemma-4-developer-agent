@@ -89,9 +89,23 @@ Per-task results: `findings/baseline_20_results.csv`. Cost: ~2.8 GPU-hours of th
 Observed in traces (3-task pilot): the model sometimes stalls in one long call (~60 tokens/s, so a 16k-token reply is ~4 min),
 repeats "Wait ..." reasoning loops, and burns calls on `edit_file` exact-match failures.
 
+## Experiment log (same 20 tasks, same 5 min / 40 tool-call budget, Gemma 4 12B)
+
+| # | Change | Resolved | Context errors | Timeouts | Tool-budget | Empty patches | GPU-h |
+|---|---|---|---|---|---|---|---|
+| 0 | Baseline (unmodified sample) | 3/20 | 8 | 5 | 3 | 9 | ~2.8 |
+| 1 | `max_output_tokens` 16384 -> 8192 | 3/20 | 0 | 11 | 4 | 6 | ~3.2 |
+
+- **Exp 1:** removed all 8 context-window failures and cut empty patches 9 -> 6, but the score did not move: one task gained
+  (`fastapi_14873`), one lost (`rich_2725`, which ran out of time with a 41k-char patch). The freed tasks now hit the 5-minute
+  limit instead (timeouts 5 -> 11). Time, not context, is now the binding limit. Keep the change (no downside), but it is not a win by itself.
+- With n=20 a single task is 5 points; differences under ~15 points are within noise. Prefer secondary metrics (failure causes) and
+  confirm any claimed gain on all 52 sound tasks.
+- Per-task results: `findings/baseline_20_results.csv`, `findings/exp01_results.csv`.
+
 ## Plan
 
 1. (Done) Reference-patch check on Kaggle: 52 sound tasks. Next: keep the 17 unknown-cause failures in mind and re-run with longer output tails if they matter.
-2. (Done) Baseline: 3/20. Next: Experiment 1 = cap `max_output_tokens` (removes the context-window failures and limits stalls), then prompt changes.
+2. (Done) Baseline: 3/20. Exp 1 (cap `max_output_tokens`) done: 3/20, time is now the limit. Next: reduce wasted generation (thinking budget, concise-reasoning prompt).
 3. Improve in order: prompts and tool use, sub-agent for code search, budgets in `eval_config.yaml`,
    best-of-N with self-verification, LoRA only if it measurably helps. Keep a held-out validation split.
