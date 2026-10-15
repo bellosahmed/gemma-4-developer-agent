@@ -13,7 +13,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 1 | Setup | DONE |
 | 2 | Measurement tools (sandbox check, 52 sound tasks, Kaggle notebooks) | DONE |
 | 3 | Baseline | DONE: 3/20 |
-| 4 | Experiments | IN PROGRESS (3 of 8 done; 4, 5 running) |
+| 4 | Experiments | IN PROGRESS (4 of 8 done; 5, 6 running) |
 | 5 | Validate best on all 52 sound tasks | NOT STARTED |
 | 6 | Package and submit | NOT STARTED (no submission made; `kaggle competitions submissions` shows none) |
 
@@ -24,9 +24,9 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 1 | max_output_tokens 8192 | done, retained | 3/20 |
 | 2 | thinking_budget 1024 | done, REJECTED | 2/20 |
 | 3 | brief-reasoning prompt | done, provisional keep | 5/20 raw; 4/19 adjusted (14851 vacuous) |
-| 4 | sandbox-gap prompt | running | - |
+| 4 | sandbox-gap prompt | done, KEEP | 6/20 raw; 5/19 adjusted |
 | 5 | per-repo cheat sheets | running | - |
-| 6 | structured pipeline | prepared | - |
+| 6 | structured pipeline | running | - |
 | 7 | graph context / best-of-N | not started | - |
 | 8 | LoRA fine-tune | not started | - |
 
@@ -49,7 +49,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 - 20-task sample is noisy (1 task = 5 points). `fastapi_14851` passes with an empty patch (vacuous): excluded from adjusted scores.
 
 ## Exact next action
-When experiments 4 and 5 finish finish (the empty-patch audit is DONE: only `fastapi_14851` is vacuous, excluded from adjusted scores): download results (`kaggle kernels output bellosashmed/<name>`), compare with 3/20, record in `EXPERIMENT_LOG.md`, then run experiment 6 (`notebooks/exp06_pipeline`, generated). Use the 51-task valid sound set (52 minus `fastapi_14851`) for Stage 5.
+When experiments 5 and 6 finish finish (the empty-patch audit is DONE: only `fastapi_14851` is vacuous, excluded from adjusted scores): download results (`kaggle kernels output bellosashmed/<name>`), compare with 3/20, record in `EXPERIMENT_LOG.md`. Then build and run a COMBINED config of the retained prompt changes (3, 4, plus 5/6 if they help), then experiment 7 (context) and 8 (LoRA feasibility). Use the 51-task valid sound set (52 minus `fastapi_14851`) for Stage 5.
 
 ## Blockers
 None.

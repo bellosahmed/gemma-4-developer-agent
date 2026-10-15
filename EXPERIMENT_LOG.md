@@ -17,6 +17,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
+| Exp 4: sandbox-gap prompt (keep) | 6/20 raw, **5/19 adjusted** | 7 timeouts, 4 tool-budget, 3 patch-failed; 8 empty patches |
 | Exp 3: brief-reasoning prompt (provisional keep) | 5/20 raw, **4/19 adjusted** | 8 timeouts, 4 tool-budget, 3 patch-failed; 10 empty patches; `fastapi_14851` gain is vacuous |
 
 ## Exp 1: cap max_output_tokens
@@ -43,12 +44,17 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Decision: provisional KEEP (prompt-only, no downside observed); re-confirm on the 52-task validation.
 - Artifacts: `notebooks/exp03_prompt/`, `findings/exp03_results.csv`, Kaggle `bellosashmed/gemma-4-exp03-prompt`.
 
-## Exp 4: sandbox-gap awareness  (RUNNING, launched 2026-10-14)
-- Change: append a "Test environment limits" section to `prompts/system.md`.
-- Artifacts: `notebooks/exp04_sandbox/` (generated, validated locally).
+## Exp 4: sandbox-gap awareness  (DONE, KEEP)
+- Change: append a "Test environment limits" section to `prompts/system.md` (test-only module/network failures are environment limits; do not retry or pip install; verify with a short inline check; never claim an unrun test passed; at most 2 calls on a test that cannot run, then submit). Only change.
+- Result: **6/20 raw, 5/19 adjusted** (baseline 3/19). Gained `fastapi_14372`, `rich_2725`, `rich_3718` (+ vacuous `fastapi_14851`); lost `fastapi_14873`. Timeouts 11 -> 7, empty patches 6 -> 8, patch-failed 2 -> 3. Mean 265 s, 30.6 tool calls.
+- Decision: KEEP (best single change so far, +2 over baseline on 19 tasks; still within noise for n=19, to be re-confirmed on the 51-task validation).
+- Artifacts: `notebooks/exp04_sandbox/`, `findings/exp04_results.csv`, Kaggle `bellosashmed/gemma-4-exp04-sandbox`.
 
 ## Exp 5: per-repo cheat sheets  (RUNNING, launched 2026-10-14)
 - Change: append verified per-repo notes (fastapi, rich, requests) to the system prompt. Artifacts: `notebooks/exp05_cheatsheets/`.
 
-## Exp 6-8: not started (6 prepared)
+## Exp 6: structured repair procedure  (RUNNING, launched 2026-10-15)
+- Change: prompt-level Localize->Reproduce->Fix->Verify procedure with regression guard. Artifacts: `notebooks/exp06_pipeline/`.
+
+## Exp 7-8: not started
  6 structured Localize->Reproduce->Fix->Verify pipeline; 7 graph-based context / best-of-N; 8 LoRA fine-tune.
