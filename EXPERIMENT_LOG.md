@@ -17,6 +17,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
+| Exp 5: per-repo cheat sheets (inconclusive) | 4/20 raw, 4/19 adjusted | 11 timeouts, 3 tool-budget, 2 patch-failed; 8 empty patches |
 | Exp 4: sandbox-gap prompt (keep) | 6/20 raw, **5/19 adjusted** | 7 timeouts, 4 tool-budget, 3 patch-failed; 8 empty patches |
 | Exp 3: brief-reasoning prompt (provisional keep) | 5/20 raw, **4/19 adjusted** | 8 timeouts, 4 tool-budget, 3 patch-failed; 10 empty patches; `fastapi_14851` gain is vacuous |
 
@@ -50,11 +51,19 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Decision: KEEP (best single change so far, +2 over baseline on 19 tasks; still within noise for n=19, to be re-confirmed on the 51-task validation).
 - Artifacts: `notebooks/exp04_sandbox/`, `findings/exp04_results.csv`, Kaggle `bellosashmed/gemma-4-exp04-sandbox`.
 
-## Exp 5: per-repo cheat sheets  (RUNNING, launched 2026-10-14)
-- Change: append verified per-repo notes (fastapi, rich, requests) to the system prompt. Artifacts: `notebooks/exp05_cheatsheets/`.
+## Exp 5: per-repo cheat sheets  (DONE, INCONCLUSIVE)
+- Change: append concise verified per-repo notes (fastapi, rich, requests: where the code lives, test layout, rich exact-output tests, requests httpbin caveat) to the system prompt. Only change.
+- Result: **4/20 raw, 4/19 adjusted** (baseline 3/19). Gained `rich_2725`, lost none. Timeouts stayed 11, empty patches 6 -> 8. Mean 283 s, 27.4 tool calls.
+- Reading: a one-task gain is within noise. The notes did not reduce exploration time (timeouts unchanged).
+- Decision: INCONCLUSIVE; candidate for the combined config only if the combined run shows no harm (ablate if it does).
+- Artifacts: `notebooks/exp05_cheatsheets/`, `findings/exp05_results.csv`, Kaggle `bellosashmed/gemma-4-exp05-cheatsheets`.
 
 ## Exp 6: structured repair procedure  (RUNNING, launched 2026-10-15)
 - Change: prompt-level Localize->Reproduce->Fix->Verify procedure with regression guard. Artifacts: `notebooks/exp06_pipeline/`.
 
-## Exp 7-8: not started
+## Exp 7: graph-tools-first navigation budget  (RUNNING, launched 2026-10-15)
+- Motivation: in exp04 traces the graph tools were 3 of 626 tool calls (0.5%) in 2 of 20 tasks; the agent mostly read files (57%) and ran commands (32%); unresolved tasks averaged 18.8 reads / 1.6 edits vs 15.8 reads / 3.3 edits for resolved.
+- Change: append a "Navigation budget" section (first two calls = search_similar_code then get_code_neighbors; <=6 line-range reads before the first edit; first edit by call 15; submit by call 30). Artifacts: `notebooks/exp07_graphfirst/`.
+
+## Exp 8: not started
  6 structured Localize->Reproduce->Fix->Verify pipeline; 7 graph-based context / best-of-N; 8 LoRA fine-tune.
