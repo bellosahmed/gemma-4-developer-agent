@@ -15,7 +15,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 3 | Baseline | DONE: 3/20 |
 | 4 | Experiments | IN PROGRESS (5 of 8 done; 6, 7 running) |
 | 5 | Validate best on all 52 sound tasks | NOT STARTED |
-| 6 | Package and submit | NOT STARTED (no submission made; `kaggle competitions submissions` shows none) |
+| 6 | Package and submit | IN PROGRESS: calibration submission made (ref 57200006, PENDING); final package not built |
 
 ## Experiments
 | # | Experiment | Status | Score (20 tasks) |
@@ -32,6 +32,12 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 
 ## Current best configuration
 `experiments/best.json` = unmodified sample agent + `max_output_tokens 8192`. Model `gemma-4-12b-it-qat-w4a16-ct`.
+
+## Kaggle submissions
+| Ref | Date (UTC) | Artifact | Status | Public score |
+|---|---|---|---|---|
+| 57200006 | 2026-10-15 00:31:44 | exp04 config (sample + max_output_tokens 8192 + sandbox-gap prompt), 12B, 5 min/40 calls. zip sha256 d3c61b6e... (`findings/submissions/57200006_exp04_MANIFEST.txt`) | PENDING | - |
+Built with `scripts/build_submission.py exp04_sandbox` (runs the notebook's own setup code; verified identical to the Kaggle run's file list/settings). Submit via `kaggle competitions submit gemma-4-developer-agent -f <zip> -m "<msg>"` (file upload route works). 1 submission/day.
 
 ## Resources (verified 2026-10-14)
 - Kaggle GPU quota: 23.25 h remaining of 30 at the last check before experiments 2-3 (each run ~3.2 h); refills 2026-10-17.

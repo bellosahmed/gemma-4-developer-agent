@@ -72,3 +72,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Budget: remaining GPU quota is reserved for the combined-config run, the 51-task validation (~8 GPU-h) and a possible regression fix.
 - Competition-rule note: distilling trajectories from a stronger paid model was deliberately avoided (reasonable-cost and provider-terms gray area).
 - Decision: NOT attempted; fallback = current best prompt-only config (no adapter). Requirement to revisit: >=100 distinct successful trajectories on tasks outside the evaluation sample, plus a validated way to train against the quantized base.
+
+## Calibration submission
+- 2026-10-15 00:31:44 UTC: submitted the exp04 configuration (ref 57200006). Purpose: obtain a real leaderboard score to compare with the internal 20-task numbers (they are NOT comparable). Result: see PROJECT_STATUS.md (updated when the score is available).
+- Risk noted: the scorer has 12 h for all tasks; our per-task cap is 5 min. If the hidden set were larger than ~140 tasks the tail could be cut off. Observed mean is ~4.4 min/task.

@@ -38,3 +38,6 @@ access_token
 .DS_Store
 .idea/
 .vscode/
+
+# Build outputs (regenerate with scripts/build_submission.py)
+build/

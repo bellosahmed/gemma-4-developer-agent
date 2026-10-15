@@ -1,0 +1,10 @@
+experiment: exp04_sandbox
+zip sha256: d3c61b6ea61e2b79c5bb04973d31d2c660eef5d4b03454d5e6749442b08b8a76
+zip bytes: 4147
+
+     419  6a969dbf5cb6  agent.yaml
+      94  56254fd2bdf3  eval_config.yaml
+     342  d969d816565e  sub_agents/code_analyzer.yaml
+     527  c762b062032c  prompts/analyzer.md
+    4702  b46f7050ea46  prompts/system.md
+     119  571a934e8991  configs/sampling.yaml
