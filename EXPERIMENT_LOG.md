@@ -17,6 +17,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
+| Exp 6: repair procedure prompt (keep) | 5/20 raw, **5/19 adjusted** | 10 timeouts, 4 tool-budget, 1 patch-failed; 10 empty patches |
 | Exp 5: per-repo cheat sheets (inconclusive) | 4/20 raw, 4/19 adjusted | 11 timeouts, 3 tool-budget, 2 patch-failed; 8 empty patches |
 | Exp 4: sandbox-gap prompt (keep) | 6/20 raw, **5/19 adjusted** | 7 timeouts, 4 tool-budget, 3 patch-failed; 8 empty patches |
 | Exp 3: brief-reasoning prompt (provisional keep) | 5/20 raw, **4/19 adjusted** | 8 timeouts, 4 tool-budget, 3 patch-failed; 10 empty patches; `fastapi_14851` gain is vacuous |
@@ -58,8 +59,12 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Decision: INCONCLUSIVE; candidate for the combined config only if the combined run shows no harm (ablate if it does).
 - Artifacts: `notebooks/exp05_cheatsheets/`, `findings/exp05_results.csv`, Kaggle `bellosashmed/gemma-4-exp05-cheatsheets`.
 
-## Exp 6: structured repair procedure  (RUNNING, launched 2026-10-15)
-- Change: prompt-level Localize->Reproduce->Fix->Verify procedure with regression guard. Artifacts: `notebooks/exp06_pipeline/`.
+## Exp 6: structured repair procedure  (DONE, KEEP)
+- Change: prompt-level Localize -> Reproduce (script in /tmp) -> Fix -> Verify -> Regression guard (git diff --stat, only intended files) -> Submit, with explicit call budgets per phase and "never claim a check you did not run". Single agent; the multi-agent chain was not tried (re-prompt/restart risk).
+- Result: **5/20 raw, 5/19 adjusted** (baseline 3/19). Gained `fastapi_14372`, `rich_2725`, `rich_3718` (the same three as Exp 4); lost `fastapi_14873`. Timeouts 10, tool-budget 4, patch-failed 1; 10 empty patches. Mean 258 s, 28.8 tool calls.
+- Tool mix: read_file 292, run_command 208, write_file 42, edit_file 19, search_similar_code 17 (graph share 2.9%, up from 0.5%), submit_patch 4. Note write_file (42) outnumbers edit_file (19).
+- Decision: KEEP (ties best). Same gains as Exp 4, so the two prompts may overlap; the combined run will test additivity.
+- Artifacts: `notebooks/exp06_pipeline/`, `findings/exp06_results.csv`, Kaggle `bellosashmed/gemma-4-exp06-pipeline`.
 
 ## Exp 7: graph-tools-first navigation budget  (RUNNING, launched 2026-10-15)
 - Motivation: in exp04 traces the graph tools were 3 of 626 tool calls (0.5%) in 2 of 20 tasks; the agent mostly read files (57%) and ran commands (32%); unresolved tasks averaged 18.8 reads / 1.6 edits vs 15.8 reads / 3.3 edits for resolved.

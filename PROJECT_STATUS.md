@@ -13,7 +13,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 1 | Setup | DONE |
 | 2 | Measurement tools (sandbox check, 52 sound tasks, Kaggle notebooks) | DONE |
 | 3 | Baseline | DONE: 3/20 |
-| 4 | Experiments | IN PROGRESS (5 of 8 done; 6, 7 running) |
+| 4 | Experiments | IN PROGRESS (7 of 8 resolved: 6 run, 1 infeasible; 7 running) |
 | 5 | Validate best on all 52 sound tasks | NOT STARTED |
 | 6 | Package and submit | IN PROGRESS: calibration submission made (ref 57200006, PENDING); final package not built |
 
@@ -26,7 +26,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 3 | brief-reasoning prompt | done, provisional keep | 5/20 raw; 4/19 adjusted (14851 vacuous) |
 | 4 | sandbox-gap prompt | done, KEEP | 6/20 raw; 5/19 adjusted |
 | 5 | per-repo cheat sheets | done, inconclusive | 4/20 raw; 4/19 adjusted |
-| 6 | structured pipeline | running | - |
+| 6 | structured pipeline (prompt-level) | done, KEEP | 5/20 raw; 5/19 adjusted |
 | 7 | graph-tools-first navigation (best-of-N judged infeasible, see log) | running | - |
 | 8 | LoRA fine-tune | NOT RUN: infeasible (6 distinct solved tasks, all in eval sample; quantized-base mismatch); see log | - |
 
