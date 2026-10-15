@@ -54,8 +54,14 @@ Built with `scripts/build_submission.py exp04_sandbox` (runs the notebook's own 
 - Public-set ceiling ~52/129 (40%) because 77 tasks fail even with the reference patch in the CPU environment (missing `inline_snapshot`/`dirty_equals`, Starlette mismatch, 17 unknown). The official scorer's environment may differ.
 - 20-task sample is noisy (1 task = 5 points). `fastapi_14851` passes with an empty patch (vacuous): excluded from adjusted scores.
 
-## Exact next action
-When experiments 6 and 7 finish finish (the empty-patch audit is DONE: only `fastapi_14851` is vacuous, excluded from adjusted scores): download results (`kaggle kernels output bellosashmed/<name>`), compare with 3/20, record in `EXPERIMENT_LOG.md`. Then build and run a COMBINED config of the retained prompt changes (3, 4, plus 5/6 if they help), then experiment 7 (context) and 8 (LoRA feasibility). Use the 51-task valid sound set (52 minus `fastapi_14851`) for Stage 5.
+## Exact next action (resume plan; times are UTC)
+State at 2026-10-15 ~04:20: GPU quota 1.01 h left (refills 2026-10-17 00:00); today's submission used; calibration submission 57200006 PENDING.
+1. **2026-10-16 >= 00:07 (submission slot opens):** check calibration score (`kaggle competitions submissions`). Then submit the Exp 7 package: `venv312/bin/python scripts/build_submission.py exp07_graphfirst` (if `build/` is missing), then `kaggle competitions submit gemma-4-developer-agent -f build/exp07_graphfirst/submission.zip -m "<msg>"`. Record ref, sha256 (see `findings/submissions/exp07_graphfirst_MANIFEST.txt`) and score here.
+2. **2026-10-17 >= 00:09 (quota refills to 30 h):** verify `kaggle quota`; push both validation notebooks concurrently: `kaggle kernels push -p notebooks/val51_exp07` and `-p notebooks/val51_combo02` (51 valid sound tasks each, ~4.5 h wall, ~9 GPU-h each). Fetch results with `scripts/fetch_output.sh`, compare with `scripts/compare.py` (use `--ref findings/baseline_20_results.csv` on the 19-task overlap).
+3. Choose the final agent from: 51-task validation, leaderboard scores of submitted candidates, simplicity (prefer Exp 7 if tied). Build with `scripts/build_submission.py`, verify, submit, and select up to 2 final submissions before 2026-12-02 23:59.
+4. Optional with spare quota: further prompt ideas from trace analysis (below).
+
+Trace analysis (exp07 + combo02, 40 runs, 168 min): read_file = 51% of calls and 37% of time; edit_file waits average 32 s (composing the edit); gaps >40 s are 42% of all time; run_command is mostly grep (254/381); pytest was called only twice in 40 runs (the agent rarely verifies). Ideas: encourage fewer, larger reads; encourage one verification run; reduce long pre-edit thinking.
 
 ## Blockers
-None.
+- GPU quota (1.01 h) until 2026-10-17 00:00 UTC and one-submission-per-day until 2026-10-16 00:00 UTC. Independent work is done; the plan above resumes at those times.
