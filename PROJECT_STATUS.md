@@ -13,7 +13,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 1 | Setup | DONE |
 | 2 | Measurement tools (sandbox check, 52 sound tasks, Kaggle notebooks) | DONE |
 | 3 | Baseline | DONE: 3/20 |
-| 4 | Experiments | IN PROGRESS (7 of 8 resolved: 6 run, 1 infeasible; 7 running) |
+| 4 | Experiments | IN PROGRESS: experiments 1-7 run, 8 judged infeasible; combined run (combo02) in progress |
 | 5 | Validate best on all 52 sound tasks | NOT STARTED |
 | 6 | Package and submit | IN PROGRESS: calibration submission made (ref 57200006, PENDING); final package not built |
 
@@ -27,11 +27,11 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 4 | sandbox-gap prompt | done, KEEP | 6/20 raw; 5/19 adjusted |
 | 5 | per-repo cheat sheets | done, inconclusive | 4/20 raw; 4/19 adjusted |
 | 6 | structured pipeline (prompt-level) | done, KEEP | 5/20 raw; 5/19 adjusted |
-| 7 | graph-tools-first navigation (best-of-N judged infeasible, see log) | running | - |
+| 7 | graph-tools-first navigation (best-of-N judged infeasible, see log) | done, KEEP (best single) | 6/20 raw; 6/19 adjusted |
 | 8 | LoRA fine-tune | NOT RUN: infeasible (6 distinct solved tasks, all in eval sample; quantized-base mismatch); see log | - |
 
 ## Current best configuration
-`experiments/best.json` = unmodified sample agent + `max_output_tokens 8192`. Model `gemma-4-12b-it-qat-w4a16-ct`.
+`experiments/best.json` = unmodified sample agent + `max_output_tokens 8192` (base). Best single prompt change so far: Exp 7 (6/19). Candidate final: combo02 (prompts 3+4+6+7) pending its run; fall back to exp07 if combo02 is not better. Model `gemma-4-12b-it-qat-w4a16-ct`.
 
 ## Kaggle submissions
 | Ref | Date (UTC) | Artifact | Status | Public score |

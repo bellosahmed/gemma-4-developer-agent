@@ -17,6 +17,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
+| Exp 7: graph-tools-first navigation (keep, best single) | 6/20 raw, **6/19 adjusted** | 10 timeouts, 3 tool-budget, 1 patch-failed; 10 empty patches; graph tools in 18/20 tasks |
 | Exp 6: repair procedure prompt (keep) | 5/20 raw, **5/19 adjusted** | 10 timeouts, 4 tool-budget, 1 patch-failed; 10 empty patches |
 | Exp 5: per-repo cheat sheets (inconclusive) | 4/20 raw, 4/19 adjusted | 11 timeouts, 3 tool-budget, 2 patch-failed; 8 empty patches |
 | Exp 4: sandbox-gap prompt (keep) | 6/20 raw, **5/19 adjusted** | 7 timeouts, 4 tool-budget, 3 patch-failed; 8 empty patches |
@@ -66,9 +67,13 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Decision: KEEP (ties best). Same gains as Exp 4, so the two prompts may overlap; the combined run will test additivity.
 - Artifacts: `notebooks/exp06_pipeline/`, `findings/exp06_results.csv`, Kaggle `bellosashmed/gemma-4-exp06-pipeline`.
 
-## Exp 7: graph-tools-first navigation budget  (RUNNING, launched 2026-10-15)
+## Exp 7: graph-tools-first navigation budget  (DONE, KEEP, BEST SINGLE CHANGE)
 - Motivation: in exp04 traces the graph tools were 3 of 626 tool calls (0.5%) in 2 of 20 tasks; the agent mostly read files (57%) and ran commands (32%); unresolved tasks averaged 18.8 reads / 1.6 edits vs 15.8 reads / 3.3 edits for resolved.
-- Change: append a "Navigation budget" section (first two calls = search_similar_code then get_code_neighbors; <=6 line-range reads before the first edit; first edit by call 15; submit by call 30). Artifacts: `notebooks/exp07_graphfirst/`.
+- Change: append a "Navigation budget" section (first two calls = search_similar_code then get_code_neighbors; <=6 line-range reads before the first edit; first edit by call 15; submit by call 30). Only change.
+- Result: **6/20 raw, 6/19 adjusted** (baseline 3/19). Gained `fastapi_14372`, `rich_2725`, `rich_3718`; lost none. Timeouts 10, tool-budget 3, patch-failed 1; 10 empty patches. Mean 286 s, 27.8 tool calls.
+- Mechanism check: graph tools used in **18/20 tasks** (5.7% of calls; first graph call was call #1 in 15 tasks) vs 2/20 (0.5%) before. Tool mix: read_file 318, run_command 180, search_similar_code 29, edit_file 20, write_file 9, get_code_neighbors 3, submit_patch 2.
+- Decision: KEEP (best single change; mechanism confirmed). Best-of-N was NOT attempted: 8-11 of 20 tasks already hit the 5-minute or 40-call limit at ~60 tokens/s, leaving no budget for multiple attempts.
+- Artifacts: `notebooks/exp07_graphfirst/`, `findings/exp07_results.csv`, Kaggle `bellosashmed/gemma-4-exp07-graph-first`.
 
 ## Exp 8: LoRA fine-tune  (NOT RUN: judged infeasible/unjustified, evidence below)
 - Training data: 120 recorded agent runs, 21 valid successes, but only **6 distinct solved tasks** (fastapi_14372, fastapi_14873, rich_2725, rich_3454, rich_3718, rich_3905), **all inside the 20-task evaluation sample**. Training on them would contaminate our only metric, and 6 tasks is far too few to teach anything.
@@ -81,3 +86,6 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 ## Calibration submission
 - 2026-10-15 00:31:44 UTC: submitted the exp04 configuration (ref 57200006). Purpose: obtain a real leaderboard score to compare with the internal 20-task numbers (they are NOT comparable). Result: see PROJECT_STATUS.md (updated when the score is available).
 - Risk noted: the scorer has 12 h for all tasks; our per-task cap is 5 min. If the hidden set were larger than ~140 tasks the tail could be cut off. Observed mean is ~4.4 min/task.
+
+## Combined config run
+- combo02 = prompts of Exp 3 + 4 + 6 + 7 on top of best (`experiments/combo02_prompts_nav.json`). Launched 2026-10-15; Kaggle `bellosashmed/gemma-4-combo02-prompts-nav`. Tests whether the prompt gains add up. combo01 (3+4+6, no navigation) is prepared but not run (quota).
