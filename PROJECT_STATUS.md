@@ -28,7 +28,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 5 | per-repo cheat sheets | done, inconclusive | 4/20 raw; 4/19 adjusted |
 | 6 | structured pipeline | running | - |
 | 7 | graph-tools-first navigation (best-of-N judged infeasible, see log) | running | - |
-| 8 | LoRA fine-tune | not started | - |
+| 8 | LoRA fine-tune | NOT RUN: infeasible (6 distinct solved tasks, all in eval sample; quantized-base mismatch); see log | - |
 
 ## Current best configuration
 `experiments/best.json` = unmodified sample agent + `max_output_tokens 8192`. Model `gemma-4-12b-it-qat-w4a16-ct`.

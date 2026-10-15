@@ -65,5 +65,10 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Motivation: in exp04 traces the graph tools were 3 of 626 tool calls (0.5%) in 2 of 20 tasks; the agent mostly read files (57%) and ran commands (32%); unresolved tasks averaged 18.8 reads / 1.6 edits vs 15.8 reads / 3.3 edits for resolved.
 - Change: append a "Navigation budget" section (first two calls = search_similar_code then get_code_neighbors; <=6 line-range reads before the first edit; first edit by call 15; submit by call 30). Artifacts: `notebooks/exp07_graphfirst/`.
 
-## Exp 8: not started
- 6 structured Localize->Reproduce->Fix->Verify pipeline; 7 graph-based context / best-of-N; 8 LoRA fine-tune.
+## Exp 8: LoRA fine-tune  (NOT RUN: judged infeasible/unjustified, evidence below)
+- Training data: 120 recorded agent runs, 21 valid successes, but only **6 distinct solved tasks** (fastapi_14372, fastapi_14873, rich_2725, rich_3454, rich_3718, rich_3905), **all inside the 20-task evaluation sample**. Training on them would contaminate our only metric, and 6 tasks is far too few to teach anything.
+- Collecting more: running the agent on the other ~31 valid sound tasks costs ~5 GPU-h and would yield maybe 3-8 more successes.
+- Base mismatch: the served model is the W4A16 compressed-tensors checkpoint (10.3 GB). Standard PEFT cannot train on those quantized weights; a LoRA would have to be trained on the 23.9 GB bf16 base (needs sharding across 4x24 GB L4, hours per run) and then applied to the quantized base at serving time, which changes numerics and may degrade the model.
+- Budget: remaining GPU quota is reserved for the combined-config run, the 51-task validation (~8 GPU-h) and a possible regression fix.
+- Competition-rule note: distilling trajectories from a stronger paid model was deliberately avoided (reasonable-cost and provider-terms gray area).
+- Decision: NOT attempted; fallback = current best prompt-only config (no adapter). Requirement to revisit: >=100 distinct successful trajectories on tasks outside the evaluation sample, plus a validated way to train against the quantized base.
