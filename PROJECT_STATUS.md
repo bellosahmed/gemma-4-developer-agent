@@ -13,7 +13,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 1 | Setup | DONE |
 | 2 | Measurement tools (sandbox check, 52 sound tasks, Kaggle notebooks) | DONE |
 | 3 | Baseline | DONE: 3/20 |
-| 4 | Experiments | IN PROGRESS: experiments 1-7 run, 8 judged infeasible; combined run (combo02) in progress |
+| 4 | Experiments | COMPLETE (experiments 1-7 run, 8 judged infeasible, combo02 run); next: Stage 5 validation and further submissions |
 | 5 | Validate best on all 52 sound tasks | NOT STARTED |
 | 6 | Package and submit | IN PROGRESS: calibration submission made (ref 57200006, PENDING); final package not built |
 
@@ -31,7 +31,7 @@ Keep the GitHub repo PRIVATE (rules: no private sharing; public sharing only on 
 | 8 | LoRA fine-tune | NOT RUN: infeasible (6 distinct solved tasks, all in eval sample; quantized-base mismatch); see log | - |
 
 ## Current best configuration
-`experiments/best.json` = unmodified sample agent + `max_output_tokens 8192` (base). Best single prompt change so far: Exp 7 (6/19). Candidate final: combo02 (prompts 3+4+6+7) pending its run; fall back to exp07 if combo02 is not better. Model `gemma-4-12b-it-qat-w4a16-ct`.
+`experiments/best.json` = unmodified sample agent + `max_output_tokens 8192` (base). Best single prompt change so far: Exp 7 (6/19). Candidates: Exp 7 (6/19, simple) and combo02 (6/19, all prompts): tie on the 20-task sample; decide by 51-task validation and leaderboard scores. Model `gemma-4-12b-it-qat-w4a16-ct`.
 
 ## Kaggle submissions
 | Ref | Date (UTC) | Artifact | Status | Public score |

@@ -17,6 +17,7 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 | Baseline (unmodified sample) | 3/20 | 8 context-window errors, 5 timeouts, 3 tool-budget, 1 patch failed; 9 empty patches |
 | Exp 1: `max_output_tokens` 16384 -> 8192 (= current best config `experiments/best.json`) | 3/20 | 0 context errors, 11 timeouts, 4 tool-budget, 2 patch failed; 6 empty patches |
 | Exp 2: thinking_budget 4096 -> 1024 (rejected) | 2/20 | 9 timeouts, 9 tool-budget, 0 patch-failed; 12 empty patches |
+| combo02: prompts 3+4+6+7 | 7/20 raw, **6/19 adjusted** | 9 timeouts, 2 tool-budget, 2 patch-failed; 8 empty patches; ties Exp 7 |
 | Exp 7: graph-tools-first navigation (keep, best single) | 6/20 raw, **6/19 adjusted** | 10 timeouts, 3 tool-budget, 1 patch-failed; 10 empty patches; graph tools in 18/20 tasks |
 | Exp 6: repair procedure prompt (keep) | 5/20 raw, **5/19 adjusted** | 10 timeouts, 4 tool-budget, 1 patch-failed; 10 empty patches |
 | Exp 5: per-repo cheat sheets (inconclusive) | 4/20 raw, 4/19 adjusted | 11 timeouts, 3 tool-budget, 2 patch-failed; 8 empty patches |
@@ -87,5 +88,10 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - 2026-10-15 00:31:44 UTC: submitted the exp04 configuration (ref 57200006). Purpose: obtain a real leaderboard score to compare with the internal 20-task numbers (they are NOT comparable). Result: see PROJECT_STATUS.md (updated when the score is available).
 - Risk noted: the scorer has 12 h for all tasks; our per-task cap is 5 min. If the hidden set were larger than ~140 tasks the tail could be cut off. Observed mean is ~4.4 min/task.
 
-## Combined config run
-- combo02 = prompts of Exp 3 + 4 + 6 + 7 on top of best (`experiments/combo02_prompts_nav.json`). Launched 2026-10-15; Kaggle `bellosashmed/gemma-4-combo02-prompts-nav`. Tests whether the prompt gains add up. combo01 (3+4+6, no navigation) is prepared but not run (quota).
+## Combined config run: combo02 (prompts 3 + 4 + 6 + 7)  (DONE, NO ADDITIVE GAIN)
+- Change: concatenated the four kept prompt sections on top of best (`experiments/combo02_prompts_nav.json`; system.md +3.7k chars, ~930 tokens).
+- Result: **7/20 raw, 6/19 adjusted** (baseline 3/19; Exp 7 alone 6/19). vs Exp 7: gained `rich_4077` (+ vacuous `fastapi_14851`), lost `rich_2725`. Timeouts 9, tool-budget 2, patch-failed 2; 8 empty patches. Mean 282 s, 28.9 tool calls.
+- Reading: no additive effect on this sample; the four prompts overlap in what they fix. Equivalent within noise to Exp 7, which is simpler (one section).
+- Decision: candidates for the final agent = Exp 7 (simple) and combo02 (all rules); choose by the 51-task validation and by real leaderboard scores. combo01 (3+4+6) not run.
+- Note: the Kaggle download service returned HTTP 502 pages saved under the real file names; use `scripts/fetch_output.sh` (retries, rejects HTML).
+- Artifacts: `notebooks/combo02_prompts_nav/`, `findings/combo02_results.csv`, Kaggle `bellosashmed/gemma-4-combo02-prompts-nav` (its output contains the packaged agent zip).
