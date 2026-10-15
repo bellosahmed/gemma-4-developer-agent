@@ -42,12 +42,14 @@ def slugify(title: str) -> str:
 
 def make(spec_path: Path) -> Path:
     spec = json.loads(spec_path.read_text())
-    base = json.loads((ROOT / 'experiments' / 'best.json').read_text()) if spec.get('base', 'best') == 'best' else {}
+    base_name = spec.get('base', 'best')
+    base = json.loads((ROOT / 'experiments' / f'{base_name}.json').read_text()) if base_name else {}
     merged = merge_specs(base, spec)
     merged['name'] = spec['name']
     tasks_file = ROOT / spec.get('tasks_file', 'findings/baseline_tasks_20.txt')
     merged['tasks'] = tasks_file.read_text().split()
     merged.pop('base', None)
+    kernel_meta_override = merged.pop('kernel_metadata', {})
 
     template = (ROOT / 'notebooks' / 'template' / 'exp_template.py').read_text()
     src = template.replace('__EXP_JSON__', repr(json.dumps(merged, sort_keys=True)))
@@ -61,6 +63,7 @@ def make(spec_path: Path) -> Path:
     meta['title'] = spec['title']
     meta['id'] = f'{KERNEL_OWNER}/{slugify(spec["title"])}'
     meta['code_file'] = f"{spec['name']}_kaggle.ipynb"
+    meta.update(kernel_meta_override)
     (out_dir / 'kernel-metadata.json').write_text(json.dumps(meta, indent=2) + '\n')
     (out_dir / 'resolved_spec.json').write_text(json.dumps(merged, indent=2, sort_keys=True) + '\n')
     return out_dir

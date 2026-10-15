@@ -1,0 +1,7 @@
+{
+  "name": "exp09_deadline",
+  "title": "Gemma 4 Exp09 Deadline",
+  "description": "Experiment 9: deadline awareness via the free get_status tool. Only change vs best_prompt: prompt section.",
+  "base": "best_prompt",
+  "system_prompt_append": "## Time awareness\n- get_status is free (it does not use one of your tool calls). It reports time_seconds_remaining and tool_calls_remaining. Call it about every 8 tool calls.\n- When fewer than 100 seconds remain, or fewer than 8 tool calls remain, stop exploring: apply your best minimal fix with edit_file right now, then call submit_patch. An imperfect patch is worth more than no patch."
+}

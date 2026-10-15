@@ -1,0 +1,7 @@
+{
+  "name": "pilot_conc3",
+  "title": "Gemma 4 Pilot Conc3",
+  "description": "Pilot: identical to the best_prompt config but 3 tasks run at once through one server. Tests whether concurrency preserves per-task behaviour (compare with exp07).",
+  "base": "best_prompt",
+  "concurrency": 3
+}

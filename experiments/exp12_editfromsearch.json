@@ -1,0 +1,7 @@
+{
+  "name": "exp12_editfromsearch",
+  "title": "Gemma 4 Exp12 Edit From Search",
+  "description": "Experiment 12: reuse code returned by the graph tools instead of re-reading it. Only change vs best_prompt: prompt section.",
+  "base": "best_prompt",
+  "system_prompt_append": "## Use the code you already have\n- search_similar_code and get_code_neighbors return the exact source text of functions. Copy a short, unique part of that source as old_string for edit_file instead of calling read_file again. Only call read_file for lines that were not shown."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "exp08_model31b",
+  "title": "Gemma 4 Exp08 Model31B",
+  "description": "Experiment 8b: the 31B model (stronger per step, slower) with the best prompt. Only change vs best_prompt: model.",
+  "base": "best_prompt",
+  "model": "gemma-4-31b-it-qat-w4a16-ct",
+  "kernel_metadata": {
+    "model_sources": [
+      "google/gemma-4/Other/gemma-4-31b-it-qat-w4a16-ct/2"
+    ]
+  }
+}

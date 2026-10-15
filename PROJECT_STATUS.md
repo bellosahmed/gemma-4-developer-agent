@@ -57,9 +57,13 @@ Built with `scripts/build_submission.py exp04_sandbox` (runs the notebook's own 
 ## Exact next action (resume plan; times are UTC)
 State at 2026-10-15 ~04:20: GPU quota 1.01 h left (refills 2026-10-17 00:00); today's submission used; calibration submission 57200006 PENDING.
 1. **2026-10-16 >= 00:07 (submission slot opens):** check calibration score (`kaggle competitions submissions`). Then submit the Exp 7 package: `venv312/bin/python scripts/build_submission.py exp07_graphfirst` (if `build/` is missing), then `kaggle competitions submit gemma-4-developer-agent -f build/exp07_graphfirst/submission.zip -m "<msg>"`. Record ref, sha256 (see `findings/submissions/exp07_graphfirst_MANIFEST.txt`) and score here.
-2. **2026-10-17 >= 00:09 (quota refills to 30 h):** verify `kaggle quota`; push both validation notebooks concurrently: `kaggle kernels push -p notebooks/val51_exp07` and `-p notebooks/val51_combo02` (51 valid sound tasks each, ~4.5 h wall, ~9 GPU-h each). Fetch results with `scripts/fetch_output.sh`, compare with `scripts/compare.py` (use `--ref findings/baseline_20_results.csv` on the 19-task overlap).
+2. **2026-10-17 >= 00:09 (quota refills to 30 h):** verify `kaggle quota`; then (see `IDEAS.md` section 4):
+   a. launch `pilot_conc3` (best prompt, 3 tasks at once; ~1.5 h) and `exp08_model31b` (31B + best prompt; ~4 h) - max 2 GPU sessions at once;
+   b. compare `pilot_conc3` with `exp07` (per-task seconds / tool calls) to decide if concurrency is faithful; if yes add `"concurrency": 3` to later specs and run `exp09_deadline`, `exp10_nothoughts`, `exp11_temp`, `exp12_editfromsearch`;
+   c. validate the best candidates on the 51 valid sound tasks (`val51_exp07`, `val51_combo02`, plus any new winner);
+   d. fetch with `scripts/fetch_output.sh`, compare with `scripts/compare.py` (paired sign test) and `scripts/task_stats.py`.
 3. Choose the final agent from: 51-task validation, leaderboard scores of submitted candidates, simplicity (prefer Exp 7 if tied). Build with `scripts/build_submission.py`, verify, submit, and select up to 2 final submissions before 2026-12-02 23:59.
-4. Optional with spare quota: further prompt ideas from trace analysis (below).
+4. Further ideas and the full backlog: `IDEAS.md`.
 
 Trace analysis (exp07 + combo02, 40 runs, 168 min): read_file = 51% of calls and 37% of time; edit_file waits average 32 s (composing the edit); gaps >40 s are 42% of all time; run_command is mostly grep (254/381); pytest was called only twice in 40 runs (the agent rarely verifies). Ideas: encourage fewer, larger reads; encourage one verification run; reduce long pre-edit thinking.
 

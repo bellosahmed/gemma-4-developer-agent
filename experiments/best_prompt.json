@@ -1,0 +1,8 @@
+{
+  "name": "best_prompt",
+  "description": "Best known config: base (max_output_tokens 8192) + Exp 7 graph-first navigation prompt (6/19 on the 20-task sample).",
+  "sampling": {
+    "max_output_tokens": 8192
+  },
+  "system_prompt_append": "## Navigation budget (use the code graph first, then edit early)\n- Your first two tool calls must be search_similar_code (query: the most specific symbol, function name or error text from the issue) and then get_code_neighbors on the best match. They return the relevant functions and their callers without reading whole files.\n- Then read at most 6 small line ranges (read_file with start_line and end_line), chosen around the symbols the graph tools returned, before your first edit.\n- Make your first edit by tool call 15 at the latest. A small, verified edit is better than more reading.\n- Call submit_patch by tool call 30, even if you are not fully certain; an unsubmitted attempt wastes the budget."
+}

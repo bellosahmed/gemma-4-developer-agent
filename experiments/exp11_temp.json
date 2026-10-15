@@ -1,0 +1,11 @@
+{
+  "name": "exp11_temp",
+  "title": "Gemma 4 Exp11 Temp",
+  "description": "Experiment 11: the sampling recommended on the Gemma 4 model card (temperature 1.0, top_p 0.95, top_k 64) instead of 0.2. Only change vs best_prompt: sampling.",
+  "base": "best_prompt",
+  "sampling": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 64
+  }
+}

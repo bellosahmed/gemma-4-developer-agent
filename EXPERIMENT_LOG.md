@@ -95,3 +95,6 @@ more informative signal. Never compare these 20-task numbers with the leaderboar
 - Decision: candidates for the final agent = Exp 7 (simple) and combo02 (all rules); choose by the 51-task validation and by real leaderboard scores. combo01 (3+4+6) not run.
 - Note: the Kaggle download service returned HTTP 502 pages saved under the real file names; use `scripts/fetch_output.sh` (retries, rejects HTML).
 - Artifacts: `notebooks/combo02_prompts_nav/`, `findings/combo02_results.csv`, Kaggle `bellosashmed/gemma-4-combo02-prompts-nav` (its output contains the packaged agent zip).
+
+## Queued experiments (generated, validated locally, NOT yet run; all built on `experiments/best_prompt.json` = base + Exp 7 prompt)
+exp08_model31b (31B model), exp09_deadline (get_status deadline rule), exp10_nothoughts (include_thoughts false), exp11_temp (temperature 1.0 / top_k 64), exp12_editfromsearch, pilot_conc3 (concurrency 3 fidelity pilot). Rationale and costs: `IDEAS.md`.

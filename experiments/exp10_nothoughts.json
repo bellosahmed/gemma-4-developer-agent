@@ -1,0 +1,11 @@
+{
+  "name": "exp10_nothoughts",
+  "title": "Gemma 4 Exp10 No Thoughts",
+  "description": "Experiment 10: strip past thoughts from the conversation history (include_thoughts false) to shrink the prompt. Only change vs best_prompt: sampling.",
+  "base": "best_prompt",
+  "sampling": {
+    "thinking_config": {
+      "include_thoughts": false
+    }
+  }
+}

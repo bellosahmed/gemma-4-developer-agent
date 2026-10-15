@@ -7,11 +7,21 @@ The reference defaults to the baseline CSV/JSONL stored in findings/. Failure ca
 import argparse
 import csv
 import json
+import math
 import statistics as st
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def sign_test_p(gained: int, lost: int) -> float:
+    """Exact two-sided sign test on tasks whose outcome changed (the only tasks that carry information)."""
+    n = gained + lost
+    if n == 0:
+        return 1.0
+    k = min(gained, lost)
+    return min(1.0, 2 * sum(math.comb(n, i) for i in range(k + 1)) / 2 ** n)
 
 
 def load(path: Path) -> dict:
@@ -77,6 +87,9 @@ def main() -> None:
     valid = [i for i in ref if i not in ex and i in new]
     adj = lambda d: sum(d[i]['resolved'] for i in valid)
     print(f'ADJUSTED (excluding vacuous {sorted(ex & set(ref))}): reference {adj(ref)}/{len(valid)} | {a.name} {adj(new)}/{len(valid)}\n')
+    g = sum(1 for i in valid if new[i]['resolved'] and not ref[i]['resolved'])
+    l = sum(1 for i in valid if ref[i]['resolved'] and not new[i]['resolved'])
+    print(f'PAIRED (valid tasks): gained {g}, lost {l}, exact sign-test p = {sign_test_p(g, l):.2f}  (p < 0.05 needed to call it real)\n')
     summary('reference', ref)
     print()
     summary(a.name, new)

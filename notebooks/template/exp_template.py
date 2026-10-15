@@ -106,7 +106,7 @@ DATA_DIR = Path('/kaggle/input/competitions/gemma-4-developer-agent')
 WORKING_DIR = Path('/kaggle/working')
 RESULTS_JSONL = WORKING_DIR / f"{EXP['name']}_results.jsonl"
 
-MODEL_NAME = 'gemma-4-12b-it-qat-w4a16-ct'
+MODEL_NAME = EXP.get('model', 'gemma-4-12b-it-qat-w4a16-ct')
 MAX_TASKS = None         # None = all tasks in the list below (20-task baseline)
 SESSION_LIMIT_HOURS = 10.5   # stop starting new tasks after this so results are saved (Kaggle max session is 12h)
 
@@ -222,6 +222,7 @@ models = server_instance.create_model_registry(aliases=[declared_model], model_p
 # %%
 import asyncio  # noqa: E402
 import concurrent.futures  # noqa: E402
+import threading  # noqa: E402
 
 from google.adk.agents.context_cache_config import ContextCacheConfig  # noqa: E402
 from google.adk.apps._configs import EventsCompactionConfig  # noqa: E402
@@ -262,28 +263,44 @@ if RESULTS_JSONL.exists():
     done = {json.loads(line)['id'] for line in RESULTS_JSONL.read_text().splitlines()}
 print(f'{len(done)} results already on disk')
 
+# Tasks run through ONE shared model server. concurrency > 1 runs several tasks at once (the server batches the
+# requests); the default 1 reproduces the sequential behaviour of the official scorer.
+CONCURRENCY = int(EXP.get('concurrency', 1))
+PATCH_DIR = WORKING_DIR / 'patches'
+PATCH_DIR.mkdir(exist_ok=True)
+write_lock = threading.Lock()
 t0 = time.time()
-for idx, task in enumerate(tasks, start=1):
-    if task.instance_id in done:
-        continue
+
+
+def run_one(idx, task):
     if (time.time() - t0) / 3600 > SESSION_LIMIT_HOURS:
-        print('Session time limit reached; stopping. Re-run this cell in a new session to resume.')
-        break
+        print('Session time limit reached; skipping', task.instance_id, flush=True)
+        return
     try:
-        res = run_sync(evaluator.evaluate_task, task=task, task_index=idx, total_tasks=len(tasks))
+        res = asyncio.run(evaluator.evaluate_task(task=task, task_index=idx, total_tasks=len(tasks)))
+        patch = (res.agent_patch or '').strip()
+        (PATCH_DIR / f'{task.instance_id}.patch').write_text(patch + '\n' if patch else '')
         row = {
             'id': task.instance_id, 'repo': task.repo, 'resolved': bool(res.resolved), 'exit_code': res.test_exit_code,
-            'patch_chars': len((res.agent_patch or '').strip()), 'tool_calls': res.tool_calls,
+            'patch_chars': len(patch), 'tool_calls': res.tool_calls,
             'llm_calls': getattr(res, 'total_llm_calls', None), 'seconds': round(res.duration_seconds, 1),
-            'error': (res.error or '')[:300],
+            'error': (res.error or '')[:300], 'test_output_tail': (res.test_output or '')[-1200:],
         }
     except Exception as exc:  # record and continue
         row = {'id': task.instance_id, 'repo': task.repo, 'resolved': False, 'exit_code': None, 'patch_chars': 0,
-               'tool_calls': None, 'llm_calls': None, 'seconds': 0.0, 'error': f'CRASH {type(exc).__name__}: {exc}'[:300]}
-    with RESULTS_JSONL.open('a') as f:
-        f.write(json.dumps(row) + '\n')
-    print(f'[{idx}/{len(tasks)}] {row["id"]:<16} resolved={row["resolved"]!s:<5} patch={row["patch_chars"]:>5} '
-          f'tools={row["tool_calls"]} {row["seconds"]}s  (elapsed {(time.time() - t0) / 60:.1f} min)', flush=True)
+               'tool_calls': None, 'llm_calls': None, 'seconds': 0.0, 'error': f'CRASH {type(exc).__name__}: {exc}'[:300],
+               'test_output_tail': ''}
+    with write_lock:
+        with RESULTS_JSONL.open('a') as f:
+            f.write(json.dumps(row) + '\n')
+        print(f'[{idx}/{len(tasks)}] {row["id"]:<16} resolved={row["resolved"]!s:<5} patch={row["patch_chars"]:>5} '
+              f'tools={row["tool_calls"]} {row["seconds"]}s  (elapsed {(time.time() - t0) / 60:.1f} min)', flush=True)
+
+
+pending = [(i, t) for i, t in enumerate(tasks, start=1) if t.instance_id not in done]
+print(f'running {len(pending)} tasks with concurrency {CONCURRENCY}')
+with concurrent.futures.ThreadPoolExecutor(max_workers=CONCURRENCY) as pool:
+    list(pool.map(lambda args: run_one(*args), pending))
 
 # %% [markdown]
 # ## 5. Summary and shutdown
@@ -299,7 +316,7 @@ print('Context-window errors:', int(df.error.str.contains('ContextWindowExceeded
       '| timeouts:', int(df.error.str.contains('session timeout').sum()),
       '| tool-budget:', int(df.error.str.contains('tool call budget').sum()))
 print(df.groupby('repo').resolved.agg(passed='sum', total='count'))
-df.to_csv(WORKING_DIR / f"{EXP['name']}_summary.csv", index=False)
+df.drop(columns=['test_output_tail'], errors='ignore').to_csv(WORKING_DIR / f"{EXP['name']}_summary.csv", index=False)
 # Package the exact agent that was evaluated, so the validated artifact is the submitted artifact.
 import hashlib  # noqa: E402
 import zipfile  # noqa: E402

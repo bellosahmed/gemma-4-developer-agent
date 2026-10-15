@@ -1,0 +1,34 @@
+{
+  "description": "Experiment 11: the sampling recommended on the Gemma 4 model card (temperature 1.0, top_p 0.95, top_k 64) instead of 0.2. Only change vs best_prompt: sampling.",
+  "name": "exp11_temp",
+  "sampling": {
+    "max_output_tokens": 8192,
+    "temperature": 1.0,
+    "top_k": 64,
+    "top_p": 0.95
+  },
+  "system_prompt_append": "## Navigation budget (use the code graph first, then edit early)\n- Your first two tool calls must be search_similar_code (query: the most specific symbol, function name or error text from the issue) and then get_code_neighbors on the best match. They return the relevant functions and their callers without reading whole files.\n- Then read at most 6 small line ranges (read_file with start_line and end_line), chosen around the symbols the graph tools returned, before your first edit.\n- Make your first edit by tool call 15 at the latest. A small, verified edit is better than more reading.\n- Call submit_patch by tool call 30, even if you are not fully certain; an unsubmitted attempt wastes the budget.",
+  "tasks": [
+    "fastapi_14258",
+    "fastapi_14372",
+    "fastapi_14851",
+    "fastapi_14873",
+    "fastapi_14986",
+    "fastapi_15280",
+    "fastapi_15588",
+    "fastapi_15589",
+    "fastapi_15661",
+    "fastapi_15800",
+    "rich_2725",
+    "rich_3061",
+    "rich_3454",
+    "rich_3506",
+    "rich_3718",
+    "rich_3905",
+    "rich_3944",
+    "rich_4077",
+    "requests_7309",
+    "requests_7427"
+  ],
+  "title": "Gemma 4 Exp11 Temp"
+}
